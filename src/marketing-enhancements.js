@@ -15,6 +15,7 @@ const icon = type => ({
   data: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 2.8 8.3 7 10 4.2-1.7 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>',
   chat: '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>',
+  spark: '<svg viewBox="0 0 24 24"><path d="m12 3 1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4L12 3ZM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z"/></svg>',
 }[type]);
 
 const services = [
@@ -68,28 +69,45 @@ function unifiedServicesMarkup() {
     </section>`;
 }
 
+function workforceDashboard() {
+  const units = [['عملیات', 88, '۴۸'], ['فروش', 72, '۳۹'], ['پشتیبانی', 61, '۳۲']];
+  return `<article class="rk-dashboard-card">
+    <header class="rk-card-title"><span class="rk-card-icon">${icon('ai')}</span><div><h3>سرمایه انسانی</h3><p>مشارکت، ریسک خروج و ترکیب کارکنان</p></div></header>
+    <div class="rk-card-kpis"><section><strong>٪۷۶</strong><small>مشارکت</small></section><section><strong>۱۲</strong><small>ریسک خروج</small></section><section><strong>۱۳۲</strong><small>کارکنان</small></section></div>
+    <div class="rk-card-chart rk-bars-chart">${units.map(([label, value, count]) => `<div class="rk-bar-row"><small>${label}</small><span><i style="--bar:${value}%"></i></span><b>${count}</b></div>`).join('')}</div>
+    <div class="rk-smart-note"><span>${icon('spark')}</span><div><b>تحلیل هوشمند</b><p>افت مشارکت در واحد عملیات با افزایش اضافه‌کار هم‌زمان شده است.</p></div></div>
+  </article>`;
+}
+
+function workflowDashboard() {
+  return `<article class="rk-dashboard-card">
+    <header class="rk-card-title"><span class="rk-card-icon">${icon('flow')}</span><div><h3>فرایندهای هوشمند</h3><p>وضعیت گردش‌کار و زمان پاسخ</p></div></header>
+    <div class="rk-card-kpis"><section><strong>۲۴</strong><small>درخواست فعال</small></section><section><strong>۱.۸ روز</strong><small>زمان پاسخ</small></section></div>
+    <div class="rk-flow-status"><span><i></i>ثبت درخواست</span><span><i></i>بررسی AI</span><span><i></i>تأیید نهایی</span></div>
+    <div class="rk-card-chart rk-line-chart"><svg viewBox="0 0 360 132" preserveAspectRatio="none"><defs><linearGradient id="rkAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9" stop-opacity=".28"/><stop offset="1" stop-color="#67e8f9" stop-opacity="0"/></linearGradient></defs><path class="rk-grid-line" d="M8 32H352M8 68H352M8 104H352"/><path class="rk-area" d="M8 108 C58 102 82 83 121 75 S196 84 238 58 S302 58 352 20 L352 126 L8 126 Z"/><path class="rk-line" d="M8 108 C58 102 82 83 121 75 S196 84 238 58 S302 58 352 20"/></svg></div>
+    <div class="rk-smart-note"><span>${icon('spark')}</span><div><b>تحلیل هوشمند</b><p>گلوگاه اصلی در بررسی مدیر میانی است؛ تأیید اولیه قابل خودکارسازی است.</p></div></div>
+  </article>`;
+}
+
+function payrollDashboard() {
+  return `<article class="rk-dashboard-card">
+    <header class="rk-card-title"><span class="rk-card-icon">${icon('dash')}</span><div><h3>حقوق و بهره‌وری</h3><p>پرداخت، اضافه‌کار و روند هزینه</p></div></header>
+    <div class="rk-card-kpis"><section><strong>۶۲.۸</strong><small>میانگین پرداخت</small></section><section><strong>٪۱۸</strong><small>سهم اضافه‌کار</small></section></div>
+    <div class="rk-payroll-chart"><div class="rk-contract-ring"><strong>٪۳۱</strong><small>مزایا و اضافه‌کار</small></div><ul><li><i></i>حقوق پایه</li><li><i></i>مزایا</li><li><i></i>اضافه‌کار</li></ul></div>
+    <div class="rk-smart-note"><span>${icon('spark')}</span><div><b>تحلیل هوشمند</b><p>رشد اضافه‌کار از رشد تعداد کارکنان بیشتر است؛ بازبینی بار کاری توصیه می‌شود.</p></div></div>
+  </article>`;
+}
+
 function dashboardMarkup() {
-  const units = [['عملیات', 88, '۴۸'], ['فروش', 72, '۳۹'], ['پشتیبانی', 61, '۳۲'], ['فناوری و داده', 49, '۲۴']];
   return `
-    <section class="rk-enhance-section rk-dashboard-section" id="dashboards" data-rk-enhancement>
-      <div class="rk-section-heading rk-split-heading">
-        <div><span>تحلیل سرمایه انسانی</span><h2>داشبورد هوشمند</h2></div>
-        <p>شاخص‌های کلیدی، نمودارهای متحرک و تحلیل هوش مصنوعی در یک نمای مدیریتی منظم و خوانا کنار هم قرار می‌گیرند.</p>
-      </div>
-      <div class="rk-dashboard-window">
-        <div class="rk-window-bar"><i></i><i></i><i></i><span>داشبورد هوشمند سرمایه انسانی</span><em>به‌روزرسانی زنده</em></div>
-        <div class="rk-kpis">
-          <article><small>کارکنان فعال</small><strong>۱۳۲</strong><em>۴ واحد سازمانی</em></article>
-          <article><small>نرخ مشارکت</small><strong>٪۷۶</strong><em>۲.۴٪ رشد ماهانه</em></article>
-          <article><small>میانگین پرداخت</small><strong>۶۲.۸</strong><em>میلیون تومان</em></article>
-          <article><small>ریسک خروج</small><strong>۱۲ نفر</strong><em>نیازمند بررسی</em></article>
+    <section class="rk-dashboard-section" id="dashboards" data-rk-enhancement>
+      <div class="rk-dashboard-inner">
+        <div class="rk-section-heading rk-dashboard-heading">
+          <span>سه نمای تحلیلی</span>
+          <h2>داشبوردهای هوشمند سازمان</h2>
+          <p>سه داشبورد مکمل برای سرمایه انسانی، فرایندها و حقوق و بهره‌وری؛ هر کدام همراه با نمودار متحرک و پیشنهاد قابل‌اقدام هوش مصنوعی.</p>
         </div>
-        <div class="rk-dashboard-grid">
-          <section class="rk-mini-panel"><header><b>ترکیب نیروی انسانی</b><span>تعداد کارکنان به تفکیک واحد</span></header>${units.map(([label, value, count]) => `<div class="rk-bar-row"><small>${label}</small><span><i style="--bar:${value}%"></i></span><b>${count}</b></div>`).join('')}</section>
-          <section class="rk-mini-panel"><header><b>ترکیب قرارداد</b><span>سهم انواع همکاری</span></header><div class="rk-contract-ring"><strong>٪۶۸</strong><small>رسمی و پیمانی</small></div><ul><li><i></i>رسمی</li><li><i></i>پیمانی</li><li><i></i>قراردادی</li></ul></section>
-          <section class="rk-mini-panel rk-wide-panel"><header><b>روند مشارکت کارکنان</b><span>چهار ماه اخیر</span></header><div class="rk-line-chart"><svg viewBox="0 0 560 160" preserveAspectRatio="none"><defs><linearGradient id="rkAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9" stop-opacity=".28"/><stop offset="1" stop-color="#67e8f9" stop-opacity="0"/></linearGradient></defs><path class="rk-grid-line" d="M12 40H548M12 82H548M12 124H548"/><path class="rk-area" d="M18 128 C90 116 118 120 175 91 S277 49 340 78 S446 55 542 27 L542 150 L18 150 Z"/><path class="rk-line" d="M18 128 C90 116 118 120 175 91 S277 49 340 78 S446 55 542 27"/></svg><i style="left:3%;top:80%"></i><i style="left:31%;top:55%"></i><i style="left:61%;top:48%"></i><i style="left:97%;top:17%"></i></div><div class="rk-chart-labels"><span>اردیبهشت</span><span>خرداد</span><span>تیر</span><span>مرداد</span></div></section>
-        </div>
-        <div class="rk-ai-summary"><span class="rk-ai-badge">AI</span><div><b>خلاصه هوشمند</b><p>افزایش اضافه‌کار واحد عملیات با افت مشارکت همراه شده است؛ بازبینی بار کاری و برنامه نگهداشت پیشنهاد می‌شود.</p></div></div>
+        <div class="rk-dashboard-cards">${workforceDashboard()}${workflowDashboard()}${payrollDashboard()}</div>
       </div>
     </section>`;
 }
