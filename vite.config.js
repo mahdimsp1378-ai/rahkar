@@ -2,7 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
 
+const isGitHubPages = process.env.GITHUB_ACTIONS === 'true';
+
 export default defineConfig({
+  base: isGitHubPages ? '/rahkar/' : '/',
   plugins: [react()],
   server: {
     host: '0.0.0.0',
