@@ -1,78 +1,66 @@
 import './main.jsx';
 import './marketing-enhancements.css';
-import automationImage from './assets/rahkar/service-automation.webp';
-import customSystemImage from './assets/rahkar/service-custom-system.webp';
-import dashboardImage from './assets/rahkar/service-dashboard.webp';
-
-const agentCards = [
-  ['گردش‌کار هوشمند', 'درخواست‌ها، تأییدها و پیگیری‌های تکراری را اجرا می‌کند و وضعیت هر مرحله را ثبت می‌کند.'],
-  ['ایجنت تحلیل تصمیم', 'روی داده‌های سازمان تحلیل انجام می‌دهد و هشدار، جمع‌بندی و پیشنهاد اقدام ارائه می‌کند.'],
-  ['ایجنت پاسخ‌گوی کارکنان', 'به پرسش‌های منابع انسانی براساس رویه‌ها، مستندات و دانش داخلی سازمان پاسخ می‌دهد.'],
-  ['ایجنت گزارش‌ساز', 'داده‌های خام را به گزارش مدیریتی، تحلیل مغایرت و خروجی قابل ارائه تبدیل می‌کند.'],
-  ['ایجنت هماهنگ‌ساز', 'بین فرم‌ها، واحدها و سامانه‌ها ارتباط ایجاد می‌کند تا فرایند بدون وقفه پیش برود.'],
-  ['ایجنت پایش فرایند', 'گلوگاه‌ها، زمان‌های تأخیر و خطاهای پرتکرار را شناسایی و برای بهبود پیشنهاد می‌دهد.'],
-];
 
 const topics = [
   'طراحی ایجنت‌های هوش مصنوعی',
   'خودکارسازی فرایندهای سازمانی',
-  'داشبورد جذب، تسویه و حقوق و دستمزد',
+  'داشبورد و تحلیل داده‌های منابع انسانی',
   'طراحی سامانه اختصاصی سازمان',
   'یکپارچه‌سازی داده و گزارش‌سازی',
 ];
 
-const icon = name => ({
+const icons = {
   flow: '<svg viewBox="0 0 24 24"><path d="M5 4v5h5M19 20v-5h-5M7 9a7 7 0 0 1 11-3M17 15a7 7 0 0 1-11 3"/></svg>',
   brain: '<svg viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 3 3 3 0 0 0 2 3v1a3 3 0 0 0 3 3M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 3 3 3 0 0 1-2 3v1a3 3 0 0 1-3 3M9 4v16M15 4v16M9 9h6M9 15h6"/></svg>',
-  chat: '<svg viewBox="0 0 24 24"><path d="M5 5h14v11H9l-4 3V5Z"/><path d="M8 9h8M8 12h5"/></svg>',
-  report: '<svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6V3Z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg>',
   link: '<svg viewBox="0 0 24 24"><path d="M10 13a4 4 0 0 0 6 0l2-2a4 4 0 0 0-6-6l-1 1M14 11a4 4 0 0 0-6 0l-2 2a4 4 0 0 0 6 6l1-1"/></svg>',
-  monitor: '<svg viewBox="0 0 24 24"><path d="M4 4h16v12H4V4ZM8 20h8M12 16v4"/><path d="m7 12 3-3 2 2 4-4"/></svg>',
-}[name]);
+};
+
+const agentCards = [
+  ['flow', 'ایجنت اجرای فرایند', 'درخواست‌ها، تأییدها و پیگیری‌های تکراری را اجرا می‌کند و وضعیت هر مرحله را ثبت می‌کند.'],
+  ['brain', 'ایجنت تحلیل و تصمیم', 'داده‌های سازمان را تحلیل می‌کند و هشدار، جمع‌بندی و پیشنهاد اقدام در اختیار مدیر می‌گذارد.'],
+  ['link', 'ایجنت اتصال سامانه‌ها', 'بین فرم‌ها، داده‌ها و واحدها ارتباط ایجاد می‌کند تا فرایند بدون دوباره‌کاری پیش برود.'],
+];
 
 function smartProcessesMarkup() {
-  const icons = ['flow', 'brain', 'chat', 'report', 'link', 'monitor'];
   return `
     <section class="rk-enhance-section rk-agents" id="smart-processes" data-rk-enhancement>
       <div class="rk-section-heading rk-split-heading">
         <div><span>ایجنت‌های سازمانی</span><h2>فرایندها هوشمند می‌شوند</h2></div>
-        <p>تمرکز راهکار بر طراحی ایجنت‌های هوش مصنوعی و خودکارسازی فرایندهاست؛ ابزارهایی که در جریان واقعی کار قرار می‌گیرند، فعالیت‌های تکراری را کاهش می‌دهند و تصمیم‌گیری را سریع‌تر می‌کنند.</p>
+        <p>راهکار، ایجنت‌های هوش مصنوعی را برای اجرای واقعی کار طراحی می‌کند؛ از تحلیل و پاسخ‌گویی تا پیگیری گردش‌کار و اتصال سامانه‌ها.</p>
       </div>
-      <div class="rk-agent-layout">
-        <div class="rk-agent-visuals">
-          <figure class="rk-agent-image rk-agent-image-main"><img src="${automationImage}" alt="خودکارسازی فرایندها با هوش مصنوعی"><figcaption>ایجنت‌های هوشمند در مسیر واقعی فرایند</figcaption></figure>
-          <figure class="rk-agent-image rk-agent-image-small"><img src="${customSystemImage}" alt="طراحی سامانه هوشمند سازمانی"><figcaption>اتصال ایجنت به سامانه و داده سازمان</figcaption></figure>
-        </div>
-        <div class="rk-agent-grid">${agentCards.map(([title, text], index) => `
-          <article><div class="rk-agent-icon">${icon(icons[index])}</div><h3>${title}</h3><p>${text}</p></article>`).join('')}
-        </div>
+      <div class="rk-agent-grid">${agentCards.map(([icon, title, text]) => `
+        <article><div class="rk-agent-icon">${icons[icon]}</div><div><h3>${title}</h3><p>${text}</p></div></article>`).join('')}
       </div>
     </section>`;
 }
 
 function dashboardMarkup() {
+  const units = [['عملیات', 88, ۴۸], ['فروش', 72, ۳۹], ['پشتیبانی', 61, ۳۲], ['فناوری و داده', 49, ۲۴]];
   return `
     <section class="rk-enhance-section rk-dashboard-section" id="dashboards" data-rk-enhancement>
       <div class="rk-section-heading rk-split-heading">
-        <div><span>نمونه داشبورد هوشمند</span><h2>جذب، تسویه و حقوق و دستمزد در یک نمای تحلیلی</h2></div>
-        <p>این نمونه نشان می‌دهد داشبورد چگونه داده‌های منابع انسانی را با تحلیل هوش مصنوعی ترکیب می‌کند تا مدیر علاوه بر شاخص‌ها، هشدار و پیشنهاد اقدام نیز دریافت کند.</p>
+        <div><span>تحلیل سرمایه انسانی</span><h2>داشبورد هوشمند</h2></div>
+        <p>نمایی یکپارچه از شاخص‌های منابع انسانی که نمودارها، روندها و تحلیل هوش مصنوعی را در یک تجربه مدیریتی منظم کنار هم قرار می‌دهد.</p>
       </div>
       <div class="rk-dashboard-layout">
         <div class="rk-dashboard-copy">
-          <article><b>جذب و استخدام</b><p>تعداد درخواست‌ها، مرحله جذب، زمان تکمیل و نرخ تبدیل نامزدها قابل‌ردیابی است.</p></article>
-          <article><b>تسویه و خروج</b><p>روند خروج، علت‌های تسویه، مصاحبه خروج و زمان بستن پرونده‌ها تحلیل می‌شود.</p></article>
-          <article><b>حقوق و دستمزد</b><p>حقوق پایه، مزایا، اضافه‌کار و مغایرت‌های پرداخت در کنار روندهای ماهانه نمایش داده می‌شوند.</p></article>
-          <div class="rk-ai-summary"><span class="rk-ai-badge">AI</span><div><b>جمع‌بندی هوشمند</b><p>«رشد اضافه‌کار واحد عملیات با افزایش تسویه هم‌زمان شده است؛ بررسی بار کاری و برنامه نگهداشت پیشنهاد می‌شود.»</p></div></div>
+          <article><b>نمای مدیریتی یکپارچه</b><p>ترکیب نیروی انسانی، مشارکت، وضعیت قرارداد، پرداخت و ریسک‌های منابع انسانی در یک قاب دیده می‌شود.</p></article>
+          <article><b>تحلیل قابل‌اقدام</b><p>هوش مصنوعی تغییرات مهم را شناسایی می‌کند و به‌جای نمایش صرف عدد، پیشنهاد اقدام ارائه می‌دهد.</p></article>
+          <div class="rk-ai-summary"><span class="rk-ai-badge">AI</span><div><b>خلاصه هوشمند</b><p>«افزایش اضافه‌کار واحد عملیات با افت مشارکت همراه شده است؛ بازبینی بار کاری و برنامه نگهداشت پیشنهاد می‌شود.»</p></div></div>
         </div>
         <div class="rk-dashboard-window">
-          <div class="rk-window-bar"><i></i><i></i><i></i><span>داشبورد تحلیلی سرمایه انسانی</span></div>
-          <div class="rk-kpis"><article><small>درخواست جذب فعال</small><strong>۲۴</strong><em>+۶ این ماه</em></article><article><small>تسویه این ماه</small><strong>۹</strong><em>۳ پرونده در بررسی</em></article><article><small>میانگین پرداخت</small><strong>۶۲.۸</strong><em>میلیون تومان</em></article></div>
-          <div class="rk-dashboard-grid">
-            <section class="rk-mini-panel"><header><b>قیف جذب</b><span>وضعیت مراحل استخدام</span></header>${[['درخواست',86],['مصاحبه',64],['پیشنهاد',43],['استخدام',29]].map(([label,value])=>`<div class="rk-bar-row"><small>${label}</small><span><i style="width:${value}%"></i></span><b>${value}</b></div>`).join('')}</section>
-            <section class="rk-mini-panel"><header><b>ترکیب پرداخت</b><span>حقوق، مزایا و اضافه‌کار</span></header><div class="rk-payroll-ring"><strong>۳۱٪</strong><small>مزایا و اضافه‌کار</small></div><ul><li><i></i>حقوق پایه</li><li><i></i>مزایا</li><li><i></i>اضافه‌کار</li></ul></section>
-            <section class="rk-mini-panel rk-wide-panel"><header><b>روند حقوق و تسویه</b><span>چهار ماه اخیر</span></header><div class="rk-line-chart"><svg viewBox="0 0 520 150" preserveAspectRatio="none"><path class="rk-area" d="M12 125 C90 112 125 120 180 82 S280 48 340 76 S430 45 508 28 L508 145 L12 145 Z"/><path class="rk-line" d="M12 125 C90 112 125 120 180 82 S280 48 340 76 S430 45 508 28"/></svg><i style="left:3%;top:78%"></i><i style="left:34%;top:49%"></i><i style="left:65%;top:46%"></i><i style="left:96%;top:14%"></i></div><div class="rk-chart-labels"><span>اردیبهشت</span><span>خرداد</span><span>تیر</span><span>مرداد</span></div></section>
+          <div class="rk-window-bar"><i></i><i></i><i></i><span>داشبورد هوشمند سرمایه انسانی</span><em>به‌روزرسانی زنده</em></div>
+          <div class="rk-kpis">
+            <article><small>کارکنان فعال</small><strong>۱۳۲</strong><em>۴ واحد سازمانی</em></article>
+            <article><small>نرخ مشارکت</small><strong>٪۷۶</strong><em>۲.۴٪ رشد ماهانه</em></article>
+            <article><small>میانگین پرداخت</small><strong>۶۲.۸</strong><em>میلیون تومان</em></article>
+            <article><small>ریسک خروج</small><strong>۱۲ نفر</strong><em>نیازمند بررسی</em></article>
           </div>
-          <div class="rk-dashboard-image"><img src="${dashboardImage}" alt="نمونه داشبورد هوشمند راهکار"></div>
+          <div class="rk-dashboard-grid">
+            <section class="rk-mini-panel rk-unit-panel"><header><b>ترکیب نیروی انسانی</b><span>تعداد کارکنان به تفکیک واحد</span></header>${units.map(([label, value, count]) => `<div class="rk-bar-row"><small>${label}</small><span><i style="--bar:${value}%"></i></span><b>${count}</b></div>`).join('')}</section>
+            <section class="rk-mini-panel rk-contract-panel"><header><b>ترکیب قرارداد</b><span>سهم انواع همکاری</span></header><div class="rk-contract-ring"><strong>٪۶۸</strong><small>رسمی و پیمانی</small></div><ul><li><i></i>رسمی</li><li><i></i>پیمانی</li><li><i></i>قراردادی</li></ul></section>
+            <section class="rk-mini-panel rk-wide-panel"><header><b>روند شاخص سرمایه انسانی</b><span>مشارکت کارکنان در چهار ماه اخیر</span></header><div class="rk-line-chart"><svg viewBox="0 0 560 160" preserveAspectRatio="none"><defs><linearGradient id="rkAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7f9" stop-opacity=".28"/><stop offset="1" stop-color="#6ee7f9" stop-opacity="0"/></linearGradient></defs><path class="rk-grid-line" d="M12 40H548M12 82H548M12 124H548"/><path class="rk-area" d="M18 128 C90 116 118 120 175 91 S277 49 340 78 S446 55 542 27 L542 150 L18 150 Z"/><path class="rk-line" d="M18 128 C90 116 118 120 175 91 S277 49 340 78 S446 55 542 27"/></svg><i style="left:3%;top:80%"></i><i style="left:31%;top:55%"></i><i style="left:61%;top:48%"></i><i style="left:97%;top:17%"></i></div><div class="rk-chart-labels"><span>اردیبهشت</span><span>خرداد</span><span>تیر</span><span>مرداد</span></div></section>
+          </div>
         </div>
       </div>
     </section>`;
@@ -82,10 +70,18 @@ function consultationMarkup() {
   return `
     <section class="rk-enhance-section rk-consultation" id="consultation" data-rk-enhancement>
       <div class="rk-consultation-shell">
-        <div class="rk-consultation-copy"><span>دریافت مشاوره</span><h2>برای شروع، مسئله سازمانتان را با ما در میان بگذارید.</h2><p>اطلاعات تماس و شرح کوتاهی از نیازتان را ثبت کنید تا درباره طراحی ایجنت، خودکارسازی فرایند، داشبورد یا سامانه اختصاصی با شما تماس بگیریم.</p><div class="rk-consultation-points"><div><b>گفت‌وگوی تخصصی</b><small>شناخت دقیق فرایند، داده و نتیجه مورد انتظار</small></div><div><b>طراحی مسیر اجرا</b><small>پیشنهاد ترکیب مناسب از سامانه و هوش مصنوعی</small></div><div><b>فازبندی و برآورد</b><small>تعریف مراحل اجرا و مدل همکاری متناسب</small></div></div></div>
-        <form class="rk-consultation-form"><label>نام و نام خانوادگی<input name="fullName" required></label><label>نام سازمان<input name="organization" required></label><label>شماره تماس<input name="phone" inputmode="tel" placeholder="09xxxxxxxxx" required></label><label>موضوع مشاوره<select name="topic">${topics.map(topic=>`<option>${topic}</option>`).join('')}</select></label><label class="rk-full-field">شرح نیاز<textarea name="message" rows="5" required></textarea></label><div class="rk-form-state rk-full-field" aria-live="polite"></div><button class="rk-full-field" type="submit">ثبت درخواست مشاوره</button></form>
+        <div class="rk-consultation-copy"><span>دریافت مشاوره</span><h2>برای شروع، مسئله سازمانتان را با ما در میان بگذارید.</h2><p>اطلاعات تماس و شرح کوتاهی از نیازتان را ثبت کنید تا درباره طراحی ایجنت، خودکارسازی فرایند، داشبورد یا سامانه اختصاصی با شما تماس بگیریم.</p><div class="rk-consultation-points"><div><b>گفت‌وگوی تخصصی</b><small>شناخت فرایند، داده و نتیجه مورد انتظار</small></div><div><b>طراحی مسیر اجرا</b><small>پیشنهاد ترکیب مناسب از سامانه و هوش مصنوعی</small></div></div></div>
+        <form class="rk-consultation-form"><label>نام و نام خانوادگی<input name="fullName" required></label><label>نام سازمان<input name="organization" required></label><label>شماره تماس<input name="phone" inputmode="tel" placeholder="09xxxxxxxxx" required></label><label>موضوع مشاوره<select name="topic">${topics.map(topic => `<option>${topic}</option>`).join('')}</select></label><label class="rk-full-field">شرح نیاز<textarea name="message" rows="5" required></textarea></label><div class="rk-form-state rk-full-field" aria-live="polite"></div><button class="rk-full-field" type="submit">ثبت درخواست مشاوره</button></form>
       </div>
     </section>`;
+}
+
+function serviceCtaMarkup() {
+  return `
+    <div class="rk-service-cta" data-rk-service-cta>
+      <div><span>گام بعدی</span><h3>با دستیار هوشمند گفت‌وگو کنید یا درخواست جلسه ثبت کنید.</h3><p>دستیار راهکار برای صورت‌بندی نیاز اولیه در دسترس است؛ برای بررسی تخصصی‌تر نیز می‌توانید درخواست گفت‌وگو ثبت کنید.</p></div>
+      <div class="rk-service-actions"><button type="button" data-rk-chat>چت با هوش مصنوعی <b>←</b></button><button type="button" data-rk-talk>درخواست گفت‌وگو</button></div>
+    </div>`;
 }
 
 function bindConsultation(root) {
@@ -119,7 +115,7 @@ function bindConsultation(root) {
 }
 
 function addNavigation(nav) {
-  const items = [['smart-processes', 'فرایندهای هوشمند'], ['dashboards', 'داشبوردها'], ['consultation', 'دریافت مشاوره']];
+  const items = [['smart-processes', 'فرایندهای هوشمند'], ['dashboards', 'داشبورد هوشمند'], ['consultation', 'دریافت مشاوره']];
   for (const [id, label] of items) {
     if (nav.querySelector(`[data-rk-nav="${id}"]`)) continue;
     const button = document.createElement('button');
@@ -131,16 +127,34 @@ function addNavigation(nav) {
   }
 }
 
+function unifyServices(main) {
+  const services = main.querySelector('.services');
+  if (!services) return;
+  const heading = services.querySelector('.section-heading');
+  if (heading && !heading.dataset.rkUnified) {
+    heading.dataset.rkUnified = '1';
+    heading.innerHTML = '<span>معرفی خدمات</span><h2>خدماتی که برای سازمان شما طراحی می‌کنیم</h2><p>از خودکارسازی فرایندها تا طراحی سامانه و داشبورد، هر خدمت متناسب با مسئله و ساختار واقعی سازمان تعریف می‌شود.</p>';
+  }
+  if (!services.querySelector('[data-rk-service-cta]')) services.insertAdjacentHTML('beforeend', serviceCtaMarkup());
+  services.querySelector('[data-rk-chat]')?.addEventListener('click', () => { location.hash = '/auth/login'; scrollTo({ top: 0 }); });
+  services.querySelector('[data-rk-talk]')?.addEventListener('click', () => document.getElementById('consultation')?.scrollIntoView({ behavior: 'smooth' }));
+}
+
 function enhanceHome() {
   const main = document.querySelector('.marketing-page main');
   const capabilities = main?.querySelector('.capabilities');
-  const aiBanner = main?.querySelector('.ai-banner');
+  const services = main?.querySelector('.services');
   const process = main?.querySelector('.process');
-  if (!main || !capabilities || !aiBanner || !process) return;
+  if (!main || !capabilities || !services || !process) return;
+
+  main.querySelector('.ai-banner')?.remove();
+  main.querySelector('.partnership')?.remove();
 
   if (!main.querySelector('#smart-processes')) capabilities.insertAdjacentHTML('afterend', smartProcessesMarkup());
-  if (!main.querySelector('#dashboards')) aiBanner.insertAdjacentHTML('beforebegin', dashboardMarkup());
+  if (!main.querySelector('#dashboards')) document.getElementById('smart-processes')?.insertAdjacentHTML('afterend', dashboardMarkup());
   if (!main.querySelector('#consultation')) process.insertAdjacentHTML('afterend', consultationMarkup());
+
+  unifyServices(main);
   bindConsultation(main);
 
   const nav = document.querySelector('.site-header nav');
