@@ -1,0 +1,31 @@
+# Dependencies and generated output
+node_modules/
+dist/
+.vercel/
+
+# Runtime data and local databases
+.data/
+data/
+backups/
+logs/
+run/
+temp/
+restore-staging/
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Secrets and environment files
+.env
+.env.*
+!.env.example
+sms.config.json
+secrets/
+*.pem
+*.key
+
+# Miscellaneous
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 128" role="img" aria-labelledby="title desc">
+  <title id="title">راهکار</title>
+  <desc id="desc">نشان راهکار؛ اتصال داده، فرایند و هوش سازمانی</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#0877D1"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(8 8)">
+    <path d="M56 4 101 30v52l-45 26L11 82V30L56 4Z" fill="#EAF7FF" stroke="#9EDCFF" stroke-width="4"/>
+    <path d="M34 68V43h18c15 0 25 9 25 23S67 89 52 89H34V68Z" fill="none" stroke="url(#g)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="34" cy="43" r="7" fill="#0877D1"/>
+    <circle cx="77" cy="66" r="7" fill="#38BDF8"/>
+    <circle cx="52" cy="89" r="7" fill="#0B9ED9"/>
+  </g>
+  <text x="138" y="83" fill="#102A43" font-size="68" font-weight="800" font-family="Vazirmatn, Tahoma, sans-serif">راهکار</text>
+  <text x="141" y="111" fill="#4C78A0" font-size="18" font-weight="500" font-family="Vazirmatn, Tahoma, sans-serif">سامانه‌های هوشمند سازمانی</text>
+</svg>

@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 15
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/customer", "destination": "/customer.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/sales-admin", "destination": "/sales.html" },
+    { "source": "/support", "destination": "/support.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
