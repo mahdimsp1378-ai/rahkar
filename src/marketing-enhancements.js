@@ -35,7 +35,7 @@ function smartProcessesMarkup() {
 }
 
 function dashboardMarkup() {
-  const units = [['عملیات', 88, ۴۸], ['فروش', 72, ۳۹], ['پشتیبانی', 61, ۳۲], ['فناوری و داده', 49, ۲۴]];
+  const units = [['عملیات', 88, '۴۸'], ['فروش', 72, '۳۹'], ['پشتیبانی', 61, '۳۲'], ['فناوری و داده', 49, '۲۴']];
   return `
     <section class="rk-enhance-section rk-dashboard-section" id="dashboards" data-rk-enhancement>
       <div class="rk-section-heading rk-split-heading">
@@ -136,8 +136,16 @@ function unifyServices(main) {
     heading.innerHTML = '<span>معرفی خدمات</span><h2>خدماتی که برای سازمان شما طراحی می‌کنیم</h2><p>از خودکارسازی فرایندها تا طراحی سامانه و داشبورد، هر خدمت متناسب با مسئله و ساختار واقعی سازمان تعریف می‌شود.</p>';
   }
   if (!services.querySelector('[data-rk-service-cta]')) services.insertAdjacentHTML('beforeend', serviceCtaMarkup());
-  services.querySelector('[data-rk-chat]')?.addEventListener('click', () => { location.hash = '/auth/login'; scrollTo({ top: 0 }); });
-  services.querySelector('[data-rk-talk]')?.addEventListener('click', () => document.getElementById('consultation')?.scrollIntoView({ behavior: 'smooth' }));
+  const chatButton = services.querySelector('[data-rk-chat]');
+  const talkButton = services.querySelector('[data-rk-talk]');
+  if (chatButton && !chatButton.dataset.bound) {
+    chatButton.dataset.bound = '1';
+    chatButton.addEventListener('click', () => { location.hash = '/auth/login'; scrollTo({ top: 0 }); });
+  }
+  if (talkButton && !talkButton.dataset.bound) {
+    talkButton.dataset.bound = '1';
+    talkButton.addEventListener('click', () => document.getElementById('consultation')?.scrollIntoView({ behavior: 'smooth' }));
+  }
 }
 
 function enhanceHome() {
