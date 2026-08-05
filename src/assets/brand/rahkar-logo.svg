@@ -1,36 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 136" role="img" aria-labelledby="title desc">
-  <title id="title">راهکار</title>
-  <desc id="desc">راهکار؛ سامانه‌ها و ایجنت‌های هوشمند سازمانی</desc>
-  <defs>
-    <linearGradient id="mark" x1="14" y1="10" x2="116" y2="122" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#22D3EE"/>
-      <stop offset="0.36" stop-color="#3B82F6"/>
-      <stop offset="0.7" stop-color="#8B5CF6"/>
-      <stop offset="1" stop-color="#14B8A6"/>
-    </linearGradient>
-    <linearGradient id="soft" x1="18" y1="15" x2="106" y2="114" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F0FDFF"/>
-      <stop offset="0.55" stop-color="#EEF4FF"/>
-      <stop offset="1" stop-color="#F5F3FF"/>
-    </linearGradient>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#315EAE" flood-opacity="0.18"/>
-    </filter>
-  </defs>
-  <g transform="translate(7 7)" filter="url(#shadow)">
-    <path d="M61 2 111 31v58L61 118 11 89V31L61 2Z" fill="url(#soft)" stroke="#C9E7FF" stroke-width="3"/>
-    <path d="M61 14 100.6 37v46L61 106 21.4 83V37L61 14Z" fill="none" stroke="url(#mark)" stroke-width="4"/>
-    <path d="M37 82V43h23c17 0 28 9 28 22.5S77 87 60 87H51" fill="none" stroke="url(#mark)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M66 87 82 102" fill="none" stroke="#6D5CE7" stroke-width="8" stroke-linecap="round"/>
-    <circle cx="37" cy="43" r="6.5" fill="#22D3EE"/>
-    <circle cx="88" cy="65.5" r="6.5" fill="#3B82F6"/>
-    <circle cx="82" cy="102" r="6.5" fill="#8B5CF6"/>
-    <circle cx="51" cy="87" r="5.5" fill="#14B8A6"/>
-    <path d="M31 58 47 67M48 39 60 52M70 48 82 58M64 76 78 72" stroke="#71DDF0" stroke-width="2.8" stroke-linecap="round" opacity=".9"/>
-  </g>
-  <g font-family="Vazirmatn, Tahoma, sans-serif" text-anchor="start">
-    <text x="151" y="84" fill="#102A43" font-size="72" font-weight="850" letter-spacing="-1.5">راهکار</text>
-    <rect x="154" y="101" width="42" height="4" rx="2" fill="url(#mark)"/>
-    <text x="207" y="113" fill="#557A99" font-size="19" font-weight="550">سامانه‌ها و ایجنت‌های هوشمند سازمانی</text>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" role="img" aria-labelledby="title desc">
+<title id="title">راهکار</title><desc id="desc">راهکار؛ سامانه‌های هوشمند سازمانی</desc>
+<defs>
+ <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#29f2ed"/><stop offset=".52" stop-color="#02bfff"/><stop offset="1" stop-color="#164cff"/></linearGradient>
+ <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<g transform="translate(38 20)" fill="none" stroke="url(#g)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+ <path d="M145 35c-42 0-76 30-76 68 0 35 25 60 58 63 9 1 17-1 25-4"/>
+ <path d="M154 32c43 5 73 34 73 70 0 33-23 58-54 64"/>
+ <path d="M140 151c18 24 28 48 21 80"/><path d="M166 151c-3 29 3 48 22 75"/>
+ <path d="M153 153c28-7 54-22 74-48"/><path d="M153 153c-25-10-49-29-69-53"/>
+ <path d="M93 63l38 23 31-36 22 40 29-19"/><path d="M78 106l42 10 31-30 35 27 34-12"/>
+ <path d="M89 140l39-13 28 24 35-26"/>
+ <path d="M137 88l19 63"/><path d="M183 89l-27 62"/>
+</g>
+<g fill="url(#g)" filter="url(#glow)">
+ <circle cx="109" cy="84" r="10"/><circle cx="148" cy="106" r="10"/><circle cx="183" cy="70" r="10"/><circle cx="213" cy="109" r="10"/><circle cx="120" cy="147" r="10"/><circle cx="163" cy="171" r="10"/><circle cx="196" cy="145" r="10"/><circle cx="228" cy="91" r="9"/>
+</g>
+<g font-family="Vazirmatn, Tahoma, sans-serif" text-anchor="middle">
+ <text x="585" y="150" fill="url(#g)" font-size="112" font-weight="900" filter="url(#glow)">راهکار</text>
+ <text x="585" y="214" fill="#64cfff" font-size="36" font-weight="650">سامانه‌های هوشمند سازمانی</text>
+</g>
 </svg>
