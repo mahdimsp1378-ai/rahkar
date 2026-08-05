@@ -1,5 +1,6 @@
 import './home-v3.jsx';
 import './final-enhancements.css';
+import exactLogo from './exact-logo.js';
 
 const icon = type => ({
   brain: '<svg viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3v1a3 3 0 0 0-2 3 3 3 0 0 0 2 3v1a3 3 0 0 0 3 3M15 4a3 3 0 0 1 3 3v1a3 3 0 0 1 2 3 3 3 0 0 1-2 3v1a3 3 0 0 1-3 3M9 4v16M15 4v16M9 9h6M9 15h6"/></svg>',
@@ -57,10 +58,19 @@ function markup() {
   </section>`;
 }
 
+function applyExactLogo() {
+  document.querySelectorAll('.rahkar-logo, .site-header img, footer img, img[alt*="راهکار"]').forEach(image => {
+    image.src = exactLogo;
+    image.alt = 'راهکار؛ سامانه‌های هوشمند سازمانی';
+    image.removeAttribute('srcset');
+    image.style.display = 'block';
+  });
+}
+
 function replaceDashboard() {
   const current = document.querySelector('#dashboard');
-  if (!current || current.hasAttribute('data-rk-final-dashboard')) return;
-  current.outerHTML = markup();
+  if (current && !current.hasAttribute('data-rk-final-dashboard')) current.outerHTML = markup();
+  applyExactLogo();
 }
 
 const observer = new MutationObserver(replaceDashboard);
