@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "prebuild": "node scripts/apply-ai-update.mjs",
-    "build": "vite build",
+    "build": "node scripts/diagnostic-build.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "start": "node server/start.js",
     "start:local": "node --env-file=.env.local server/start.js",
