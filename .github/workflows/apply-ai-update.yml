@@ -6,6 +6,9 @@ on:
     paths:
       - '.github/update-payload/**'
       - '.github/workflows/apply-ai-update.yml'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
