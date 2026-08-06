@@ -1,12 +1,16 @@
 {
   "name": "rahkar-intelligent-platform",
   "private": true,
-  "version": "1.0.0-production.0",
+  "version": "1.1.0-production.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "prebuild": "node scripts/apply-ai-update.mjs",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "start": "node server/start.js",
+    "start:local": "node --env-file=.env.local server/start.js",
+    "local": "npm run build && npm run start:local"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "5.2.8",
