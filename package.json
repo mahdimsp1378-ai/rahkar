@@ -1,11 +1,11 @@
 {
   "name": "rahkar-intelligent-platform",
   "private": true,
-  "version": "1.1.0-production.0",
+  "version": "1.2.1-production.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "prebuild": "node scripts/apply-ai-update.mjs",
+    "prebuild": "node scripts/apply-ai-update-v121.mjs",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "start": "node server/start.js",
