@@ -1,0 +1,81 @@
+name: Apply Rahkar AI consultation update
+
+on:
+  push:
+    branches: [agent/public-ai-consultation]
+    paths:
+      - '.github/update-payload/**'
+      - '.github/workflows/apply-ai-update.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-rahkar-ai-update
+  cancel-in-progress: false
+
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout update branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/public-ai-consultation
+          fetch-depth: 0
+
+      - name: Rebuild and verify patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import gzip
+          import hashlib
+
+          parts = sorted(Path('.github/update-payload').glob('part*'))
+          if len(parts) != 8:
+              raise SystemExit(f'Expected 8 payload parts, found {len(parts)}')
+
+          encoded = ''.join(part.read_text(encoding='utf-8').strip() for part in parts)
+          patch = gzip.decompress(base64.b64decode(encoded))
+          digest = hashlib.sha256(patch).hexdigest()
+          expected = '7f594caaeb5db2c7c2ca66cdac7b1d4da94417eefd2c97ceeabf630967472673'
+          if digest != expected:
+              raise SystemExit(f'Patch checksum mismatch: {digest}')
+
+          Path('/tmp/rahkar-ai-update.patch').write_bytes(patch)
+          print(f'Patch verified: {digest} ({len(patch)} bytes)')
+          PY
+
+      - name: Apply source changes
+        shell: bash
+        run: |
+          git apply --check /tmp/rahkar-ai-update.patch
+          git apply --whitespace=fix /tmp/rahkar-ai-update.patch
+          rm -rf .github/update-payload
+          rm -f .github/workflows/apply-ai-update.yml
+
+      - name: Validate JavaScript syntax
+        shell: bash
+        run: |
+          find server api src -type f \( -name '*.js' -o -name '*.jsx' \) -print0 | while IFS= read -r -d '' file; do
+            node --check "$file"
+          done
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Commit final implementation
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Add public AI consultation and admin controls'
+          git push origin HEAD:agent/public-ai-consultation
