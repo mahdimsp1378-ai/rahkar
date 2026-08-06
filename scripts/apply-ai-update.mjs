@@ -6,7 +6,7 @@ import { gunzipSync } from 'node:zlib';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const marker = join(root, 'server', 'public-ai-consultation.js');
-const payloadDirectory = join(root, '.github', 'update-payload');
+const payloadDirectory = join(root, 'update-payload');
 const expectedDigest = '7f594caaeb5db2c7c2ca66cdac7b1d4da94417eefd2c97ceeabf630967472673';
 const excludedPaths = new Set(['package.json', 'vercel.json']);
 
