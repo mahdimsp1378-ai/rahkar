@@ -39,8 +39,9 @@ if (digest !== expectedDigest) {
 
 const patchPath = join(root, '.rahkar-ai-update.patch');
 writeFileSync(patchPath, patch);
+const commonArgs = ['apply', '--exclude=package.json'];
 
-const check = spawnSync('git', ['apply', '--check', patchPath], {
+const check = spawnSync('git', [...commonArgs, '--check', patchPath], {
   cwd: root,
   stdio: 'inherit',
 });
@@ -49,7 +50,7 @@ if (check.status !== 0) {
   throw new Error('Rahkar AI update cannot be applied to this source revision.');
 }
 
-const apply = spawnSync('git', ['apply', '--whitespace=fix', patchPath], {
+const apply = spawnSync('git', [...commonArgs, '--whitespace=fix', patchPath], {
   cwd: root,
   stdio: 'inherit',
 });
