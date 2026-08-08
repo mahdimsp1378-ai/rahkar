@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import '@fontsource-variable/vazirmatn';
 import './styles.css';
+import './android-mobile.css';
 import logo from './assets/brand/rahkar-logo.svg';
 import heroImage from './assets/rahkar/hero-organization.webp';
 import automationImage from './assets/rahkar/service-automation.webp';

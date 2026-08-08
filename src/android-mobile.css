@@ -1,0 +1,42 @@
+/* Android/mobile hardening shared by the public site and all portals. */
+html{min-width:320px;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;color-scheme:light}
+body,#root{min-width:320px;min-height:100%;overflow-x:hidden}
+button,a,input,select,textarea,summary,label{touch-action:manipulation}
+button,a,[role="button"],summary{-webkit-tap-highlight-color:rgba(8,119,209,.14)}
+input,select,textarea{font-size:16px!important}
+img,svg,video,canvas{max-width:100%}
+@supports(min-height:100dvh){.auth-page,.auth-art,.auth-panel,.portal-shell,.cart-page,.admin-page,.portal-auth-page,.credential-page,.portal-boot,.app-loading{min-height:100dvh}.portal-shell aside{height:100dvh}}
+@media(max-width:820px){
+  .portal-main>main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .portal-bottom-nav{bottom:max(8px,env(safe-area-inset-bottom,0px));height:68px}
+  .portal-bottom-nav button,.portal-menu,.portal-head-actions>button,.portal-aside-head>button,.mobile-thread-back{min-width:48px;min-height:48px}
+  .portal-shell aside{width:min(86vw,320px);padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain}
+  .admin-table{margin-inline:-2px;-webkit-overflow-scrolling:touch;overscroll-behavior-inline:contain}
+  .admin-table::after{content:"برای دیدن ستون‌های بیشتر، جدول را افقی بکشید";display:block;padding:9px 4px;color:var(--portal-muted);font-size:11px}
+  .support-workspace,.support-v5-customer .support-thread{max-width:100%}
+  .customer-composer,.conversation-composer{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:600px){
+  .portal-auth-brand{display:none}
+  .portal-auth-form{min-height:100dvh;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(20px + env(safe-area-inset-bottom,0px))}
+  .portal-auth-form form,.credential-page form{border-radius:22px;padding:24px 18px;width:100%}
+  .portal-auth-form h2,.credential-page h1{font-size:24px;line-height:1.45}
+  .portal-auth-form button,.credential-page button,.portal-primary{min-height:48px}
+  .portal-global-logout{top:max(10px,env(safe-area-inset-top,0px));min-height:44px}
+  .portal-main>header{padding-top:env(safe-area-inset-top,0px);height:calc(70px + env(safe-area-inset-top,0px))}
+  .portal-main>main,.cart-page>main,.admin-page>main{padding-inline:12px}
+  .portal-card{border-radius:16px;padding:15px}
+  .portal-page-head{margin-bottom:16px}.portal-page-head h1{font-size:1.4rem}
+  .portal-welcome{padding:20px;border-radius:18px}
+  .admin-section-head>div{align-items:flex-start}.admin-section-head>div>span{width:46px;height:46px;flex:none}
+  .admin-section-head h2{font-size:18px}.admin-section-head p{font-size:13px;line-height:1.8}
+  .support-team-list>article{grid-template-columns:auto minmax(0,1fr)}
+  .agent-row-actions{grid-column:1/-1;width:100%;flex-wrap:wrap!important}
+  .agent-row-actions button{min-height:44px;flex:1;justify-content:center}
+  .permission-checks span{min-height:44px}
+  .agent-credential-backdrop{align-items:end!important;padding-top:env(safe-area-inset-top,0px)}
+  .agent-credential-backdrop form{width:100%;max-height:calc(100dvh - env(safe-area-inset-top,0px));border-radius:22px 22px 0 0}
+}
+@media(max-width:380px){.portal-kpis{grid-template-columns:1fr}.portal-bottom-nav{right:6px;left:6px}.portal-bottom-nav button{font-size:.59rem}.auth-card{padding:22px 16px}}
+@media(orientation:landscape) and (max-height:520px){.portal-auth-brand{display:none}.portal-auth-form{min-height:100dvh;padding:14px}.portal-auth-form form{margin:auto;padding:20px}.portal-bottom-nav{height:58px}.portal-main>main{padding-bottom:78px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.portal-bottom-nav,.portal-shell aside{transition:none!important}}
