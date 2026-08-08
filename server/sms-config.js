@@ -68,7 +68,10 @@ export async function getSmsConfig() {
 
 export async function assertSmsReadyForProduction() {
   const config = await getSmsConfig();
-  if (!config.enabled || !['smsir', 'kavenegar'].includes(config.provider)) {
+  // SMS is optional. When explicitly disabled, OTP endpoints can report that
+  // the service is unavailable without preventing the whole app from starting.
+  if (!config.enabled) return config;
+  if (!['smsir', 'kavenegar'].includes(config.provider)) {
     throw new Error('در Production سرویس پیامک باید در sms.config.json با smsir یا kavenegar فعال شود.');
   }
   if (!config.apiKey) throw new Error('کلید API پیامک در sms.config.json تنظیم نشده است.');

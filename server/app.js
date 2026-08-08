@@ -17,6 +17,7 @@ import { assertSmsReadyForProduction } from './sms-config.js';
 import { scanUploadedFile } from './malware-scanner.js';
 import { createSupportV5Router, requestSupportRebalance, SUPPORT_PERMISSION_KEYS } from './support-v5.js';
 import { SUPPORT_TOPIC_IDS } from '../shared/support-topics.js';
+import publicAiConsultationRouter from './public-ai-consultation.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -70,6 +71,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json({ limit: '1mb' }));
+app.use('/api/public-ai', publicAiConsultationRouter);
 app.use((req, res, next) => {
   req.correlationId = String(req.headers['x-correlation-id'] || randomUUID()).replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 100) || randomUUID();
   res.setHeader('X-Correlation-ID', req.correlationId);
@@ -259,6 +261,7 @@ const passwordIsStrong = value =>
   /\d/.test(value) &&
   /[^A-Za-z0-9]/.test(value);
 const isProduction = () => process.env.NODE_ENV === 'production';
+const isVercel = () => process.env.VERCEL === '1';
 const isFixedDemo = () => !isProduction() && (process.env.SMS_PROVIDER || 'fixed') === 'fixed';
 const portalMfaRequired = () => process.env.PORTAL_MFA_REQUIRED === 'true' ||
   (isProduction() && process.env.PORTAL_MFA_REQUIRED !== 'false');
@@ -3986,7 +3989,10 @@ export async function ready() {
     if (!/^\d+$/.test(String(process.env.TRUST_PROXY_HOPS || ''))) {
       throw new Error('TRUST_PROXY_HOPS باید در Production دقیقاً مطابق تعداد Proxyهای مورد اعتماد تنظیم شود.');
     }
-    if (!String(process.env.CLAMAV_HOST || process.env.CLAMAV_COMMAND || '').trim()) {
+    // Vercel functions cannot run or reach a local ClamAV daemon. Upload routes
+    // still fail closed when no scanner is configured; do not crash unrelated
+    // pages and authentication during server startup.
+    if (!isVercel() && !String(process.env.CLAMAV_HOST || process.env.CLAMAV_COMMAND || '').trim()) {
       throw new Error('سرویس ClamAV برای اسکن اجباری پیوست‌ها در Production تنظیم نشده است.');
     }
     if (String(process.env.HEALTHCHECK_TOKEN || '').length < 24) {

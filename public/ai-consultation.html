@@ -1,63 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const homePath = resolve(root, 'src', 'home-v3.jsx');
-const publicDir = resolve(root, 'public');
-const consultationPath = resolve(publicDir, 'ai-consultation.html');
-const aiTarget = "onClick={() => { window.location.href = '/ai-consultation.html'; }}";
-
-function patchChatButtons(source) {
-  const labels = ['چت با هوش مصنوعی', 'گفتگو با هوش مصنوعی', 'گفت‌وگو با هوش مصنوعی'];
-  let changed = 0;
-  for (const label of labels) {
-    const safeLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const patterns = [
-      new RegExp("onClick=\\{\\(\\)\\s*=>\\s*navigateTo\\('\\/auth\\/login'\\)\\}([\\s\\S]{0,420}?" + safeLabel + ")", 'g'),
-      new RegExp("onClick=\\{\\(\\)\\s*=>\\s*navigateTo\\('\\/support'\\)\\}([\\s\\S]{0,420}?" + safeLabel + ")", 'g'),
-      new RegExp("onClick=\\{\\(\\)\\s*=>\\s*goSection\\('consultation'\\)\\}([\\s\\S]{0,420}?" + safeLabel + ")", 'g'),
-      new RegExp("onClick=\\{\\(\\)\\s*=>\\s*document\\.getElementById\\('consultation'\\)\\?\\.scrollIntoView\\(\\{ behavior: 'smooth' \\}\\)\\}([\\s\\S]{0,420}?" + safeLabel + ")", 'g'),
-    ];
-    for (const pattern of patterns) {
-      source = source.replace(pattern, (...args) => {
-        changed += 1;
-        return `${aiTarget}${args[1]}`;
-      });
-    }
-  }
-  source = source.replace(/data-rk-chat(\s|>)/g, `data-rk-chat data-rk-ai-consultation$1`);
-  return { source, changed };
-}
-
-function patchMarketingEnhancements() {
-  const candidates = [resolve(root, 'src', 'marketing-enhancements.js'), resolve(root, 'src', 'final-enhancements.js')];
-  for (const path of candidates) {
-    try {
-      let source = readFileSync(path, 'utf8');
-      const before = source;
-      source = source.replace(/window\.location\.hash\s*=\s*['"]\/auth\/login['"]/g, "window.location.href = '/ai-consultation.html'");
-      source = source.replace(/navigateTo\(['"]\/auth\/login['"]\)/g, "window.location.href = '/ai-consultation.html'");
-      source = source.replace(/href\s*=\s*['"]#\/auth\/login['"]/g, "href='/ai-consultation.html'");
-      if (source !== before) writeFileSync(path, source, 'utf8');
-    } catch {}
-  }
-}
-
-function patchHomeButton() {
-  let source = readFileSync(homePath, 'utf8');
-  const before = source;
-  const result = patchChatButtons(source);
-  source = result.source;
-  if (source !== before) {
-    writeFileSync(homePath, source, 'utf8');
-    console.log(`Rahkar AI: ${result.changed} AI chat CTA target(s) now open /ai-consultation.html.`);
-  } else {
-    console.log('Rahkar AI: no additional homepage AI chat CTA patch was needed.');
-  }
-}
-
-const consultationHtml = `<!doctype html>
+<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8" />
@@ -212,10 +153,4 @@ const consultationHtml = `<!doctype html>
     });
   </script>
 </body>
-</html>`;
-
-mkdirSync(publicDir, { recursive: true });
-patchHomeButton();
-patchMarketingEnhancements();
-writeFileSync(consultationPath, consultationHtml, 'utf8');
-console.log('Rahkar AI: /ai-consultation.html is ready with normalized Persian typography.');
+</html>
