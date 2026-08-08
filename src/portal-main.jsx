@@ -11,6 +11,7 @@ import { SalesAdminPage } from './sales-admin.jsx';
 import { api, getToken, setToken } from './api.js';
 import aronageLogo from './assets/brand/rahkar-logo.svg';
 import './portal.css';
+import './android-mobile.css';
 
 const portalPath = window.location.pathname.toLowerCase();
 const portal = portalPath.includes('support') ? 'support' : portalPath.includes('sales') ? 'sales' : 'admin';
