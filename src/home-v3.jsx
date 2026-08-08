@@ -88,8 +88,8 @@ function Hero() {
       <h1>سازمان شما،<br/><em>هوشمندتر از فرایندهای امروز.</em></h1>
       <p>راهکار داده، فرایند و هوش مصنوعی را در یک سامانه عملیاتی کنار هم قرار می‌دهد؛ از طراحی ایجنت و خودکارسازی تا داشبورد مدیریتی و سامانه اختصاصی.</p>
       <div className="hero-actions">
-        <button className="primary-cta" onClick={() => document.getElementById('consultation')?.scrollIntoView({ behavior: 'smooth' })}>دریافت مشاوره <ArrowLeft/></button>
-        <button className="secondary-cta" onClick={() => navigateTo('/auth/login')}>چت با هوش مصنوعی</button>
+        <button className="primary-cta" onClick={() => { window.location.href = '/ai-consultation.html'; }}>دریافت مشاوره <ArrowLeft/></button>
+        <button className="secondary-cta" onClick={() => { window.location.href = '/ai-consultation.html'; }}>چت با هوش مصنوعی</button>
       </div>
       <div className="hero-ai-cluster"><AnimatedAiIcon Icon={BrainCircuit}/><AnimatedAiIcon Icon={Workflow} variant="teal"/><AnimatedAiIcon Icon={Database} variant="violet"/></div>
     </div>
@@ -141,7 +141,7 @@ function ConsultationSection() {
     catch (error) { setStatus({ loading: false, success: '', error: error.message || 'ثبت درخواست ناموفق بود.' }); }
   };
   return <section className="consultation-section" id="consultation"><div className="consultation-shell">
-    <div className="consultation-copy"><div className="consultation-icons"><AnimatedAiIcon Icon={Bot}/><AnimatedAiIcon Icon={Network} variant="teal"/></div><span>از کجا شروع کنیم؟</span><h2>با هوش مصنوعی گفت‌وگو کنید یا درخواست جلسه ثبت کنید.</h2><p>برای صورت‌بندی اولیه مسئله، وارد گفت‌وگو با دستیار راهکار شوید؛ برای بررسی تخصصی‌تر نیز فرم را تکمیل کنید.</p><button className="chat-button" onClick={() => navigateTo('/auth/login')}><Bot/> چت با هوش مصنوعی <ArrowLeft/></button></div>
+    <div className="consultation-copy"><div className="consultation-icons"><AnimatedAiIcon Icon={Bot}/><AnimatedAiIcon Icon={Network} variant="teal"/></div><span>از کجا شروع کنیم؟</span><h2>با هوش مصنوعی گفت‌وگو کنید یا درخواست جلسه ثبت کنید.</h2><p>برای صورت‌بندی اولیه مسئله، وارد گفت‌وگو با دستیار راهکار شوید؛ برای بررسی تخصصی‌تر نیز فرم را تکمیل کنید.</p><button className="chat-button" onClick={() => { window.location.href = '/ai-consultation.html'; }}><Bot/> چت با هوش مصنوعی <ArrowLeft/></button></div>
     <form className="consultation-form" onSubmit={submit}><label>نام و نام خانوادگی<input value={form.fullName} onChange={event => setForm({ ...form, fullName: event.target.value })} required/></label><label>نام سازمان<input value={form.organization} onChange={event => setForm({ ...form, organization: event.target.value })} required/></label><label>شماره تماس<input value={form.phone} onChange={event => setForm({ ...form, phone: event.target.value })} placeholder="09xxxxxxxxx" required/></label><label>موضوع مشاوره<select value={form.topic} onChange={event => setForm({ ...form, topic: event.target.value })}>{consultationTopics.map(topic => <option key={topic}>{topic}</option>)}</select></label><label className="full-field">شرح نیاز<textarea rows="5" value={form.message} onChange={event => setForm({ ...form, message: event.target.value })} required/></label>{status.error && <div className="form-state error full-field">{status.error}</div>}{status.success && <div className="form-state success full-field">{status.success}</div>}<button className="submit-button full-field" type="submit" disabled={status.loading}>{status.loading ? 'در حال ثبت…' : 'ثبت درخواست گفت‌وگو'}</button></form>
   </div></section>;
 }
