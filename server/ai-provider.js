@@ -81,6 +81,41 @@ async function compatibleChat(config, payload) {
   throw lastError;
 }
 
+export async function generateConsultationAnswer({ messages, maxTokens = 900, temperature = 0.25 }) {
+  const config = getAiConfig();
+  if (config.provider === 'disabled' || config.provider === 'mock' || config.provider === 'fixed') {
+    throw new AiProviderError('سرویس مشاوره هوش مصنوعی در حال حاضر فعال نیست.', 'disabled');
+  }
+  if (!config.baseUrl || !config.apiKey) {
+    throw new AiProviderError('پیکربندی سرویس هوش مصنوعی کامل نیست.', 'missing_credentials');
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(config.timeoutMs, 30_000));
+  try {
+    const response = await fetch(`${config.baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${config.apiKey}` },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: config.model,
+        messages: messages.map(item => ({ role: item.role, content: redactSensitiveText(item.content) })),
+        max_tokens: Math.min(1600, Math.max(300, Number(maxTokens))),
+        temperature: Math.min(0.6, Math.max(0, Number(temperature))),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new AiProviderError(data?.error?.message || 'سرویس هوش مصنوعی پاسخ نامعتبر داد.', `http_${response.status}`);
+    const text = String(data?.choices?.[0]?.message?.content || '').trim();
+    if (!text) throw new AiProviderError('سرویس هوش مصنوعی پاسخ خالی داد.', 'empty_response');
+    return { text, provider: config.provider, model: config.model };
+  } catch (error) {
+    if (error?.name === 'AbortError') throw new AiProviderError('زمان پاسخ سرویس هوش مصنوعی به پایان رسید.', 'timeout');
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function generateGroundedAnswer(payload) {
   const config = getAiConfig();
   if (config.provider === 'disabled') throw new AiProviderError('هوش مصنوعی در این محیط غیرفعال است.', 'disabled');
