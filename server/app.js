@@ -4047,7 +4047,8 @@ export async function ready() {
   }
   const admin = await db.selectFrom('users').select('id').where('mobile', '=', adminMobile).executeTakeFirstOrThrow();
   const credential = await db.selectFrom('portal_credentials').select('user_id').where('user_id', '=', admin.id).executeTakeFirst();
-  if (!credential) {
+  const forceCredentialReset = isProduction() && process.env.ADMIN_FORCE_CREDENTIAL_RESET === 'true';
+  if (!credential || forceCredentialReset) {
     const initialUsername = String(process.env.ADMIN_INITIAL_USERNAME || '').trim();
     const passwordFile = String(process.env.ADMIN_INITIAL_PASSWORD_FILE || '').trim();
     let initialPassword = String(process.env.ADMIN_INITIAL_PASSWORD || '');
@@ -4058,13 +4059,17 @@ export async function ready() {
     if (!/^[A-Za-z][A-Za-z0-9._-]{3,39}$/.test(initialUsername) || !passwordIsStrong(initialPassword)) {
       throw new Error('ADMIN_INITIAL_USERNAME و ADMIN_INITIAL_PASSWORD امن برای ایجاد مدیر اولیه الزامی است.');
     }
-    await db.insertInto('portal_credentials').values({
-      user_id: admin.id,
+    const credentialValues = {
       username: initialUsername,
       password_hash: passwordHash(initialPassword),
       must_change: 1,
       updated_at: now(),
-    }).execute();
+    };
+    if (credential) {
+      await db.updateTable('portal_credentials').set(credentialValues).where('user_id', '=', admin.id).execute();
+    } else {
+      await db.insertInto('portal_credentials').values({ user_id: admin.id, ...credentialValues }).execute();
+    }
   }
   return app;
 }
