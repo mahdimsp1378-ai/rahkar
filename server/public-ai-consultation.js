@@ -18,7 +18,9 @@ const initialSchema = z.object({
   org: z.string().trim().min(2).max(160),
   phone: z.string().trim().max(24).optional().default(''),
   size: z.string().trim().min(2).max(80),
-  topic: z.string().trim().min(3).max(160),
+  topic: z.enum(['حقوقی', 'مالی', 'منابع انسانی', 'تحول دیجیتال و سامانه‌های هوشمند']),
+  subtopic: z.string().trim().min(2).max(160),
+  subtopicOther: z.string().trim().max(160).optional().default(''),
   problem: z.string().trim().min(10).max(5000),
 });
 const questionSchema = z.object({
@@ -53,7 +55,8 @@ const systemPrompt = `شما مشاور اولیه سازمانی «راهکار
 const contextText = (data, files) => [
   `نام سازمان: ${data.org}`,
   `اندازه سازمان: ${data.size}`,
-  `موضوع: ${data.topic}`,
+  `حوزه اصلی: ${data.topic}`,
+  `زیرموضوع: ${data.subtopic}`,
   `شرح مسئله: ${data.problem}`,
   files.length ? `پیوست‌های اعلام‌شده: ${files.map(file => file.originalname).join('، ')} (محتوای فایل در این مرحله تحلیل نشده است)` : '',
 ].filter(Boolean).join('\n');
@@ -61,8 +64,15 @@ const contextText = (data, files) => [
 router.post('/consultation/start', upload.array('files', 3), async (req, res) => {
   const parsed = initialSchema.safeParse(req.body || {});
   if (!parsed.success) return res.status(400).json({ error: 'اطلاعات مسئله را کامل و دقیق وارد کنید.' });
+  if (parsed.data.subtopic === 'سایر' && parsed.data.subtopicOther.length < 2) {
+    return res.status(400).json({ error: 'لطفاً موضوع موردنظر خود را کوتاه و دقیق بنویسید.' });
+  }
   await ensureTables();
-  const context = contextText(parsed.data, req.files || []);
+  const consultationData = {
+    ...parsed.data,
+    subtopic: parsed.data.subtopic === 'سایر' ? parsed.data.subtopicOther : parsed.data.subtopic,
+  };
+  const context = contextText(consultationData, req.files || []);
   const messages = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: `بر اساس اطلاعات زیر یک تحلیل اولیه واقعی ارائه کن. در پایان، کاربر را برای مطرح‌کردن اولین پرسش تکمیلی دعوت کن.\n\n${context}` },
@@ -74,7 +84,7 @@ router.post('/consultation/start', upload.array('files', 3), async (req, res) =>
     const timestamp = new Date().toISOString();
     await db.insertInto('public_ai_consultations').values({
       id: randomUUID(), token_hash: hashToken(token), organization: parsed.data.org,
-      phone: parsed.data.phone || null, topic: parsed.data.topic, context_json: JSON.stringify(parsed.data),
+      phone: parsed.data.phone || null, topic: parsed.data.topic, context_json: JSON.stringify(consultationData),
       messages_json: JSON.stringify(messages), questions_answered: 0, expires_at: expiresAt(),
       created_at: timestamp, updated_at: timestamp,
     }).execute();
