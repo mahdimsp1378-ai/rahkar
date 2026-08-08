@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 68137)
-Total output lines: 4068
-
 import { createHash, createHmac, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import { basename, dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -264,6 +261,7 @@ const passwordIsStrong = value =>
   /\d/.test(value) &&
   /[^A-Za-z0-9]/.test(value);
 const isProduction = () => process.env.NODE_ENV === 'production';
+const isVercel = () => process.env.VERCEL === '1';
 const isFixedDemo = () => !isProduction() && (process.env.SMS_PROVIDER || 'fixed') === 'fixed';
 const portalMfaRequired = () => process.env.PORTAL_MFA_REQUIRED === 'true' ||
   (isProduction() && process.env.PORTAL_MFA_REQUIRED !== 'false');
@@ -1957,7 +1955,448 @@ app.post('/api/orders', auth, asyncRoute(async (req, res) => {
       id: uuid(), order_id: id, from_status: null, to_status: serviceOnly ? 'reviewing' : 'awaiting_payment',
       note: serviceOnly ? 'ثبت درخواست خدمت توسط مشتری' : 'ثبت سفارش توسط مشتری', changed_by: req.user.id, created_at: createdAt,
     }).execute();
-    await trx.insertInto('notifications').values({ id: uuid(), user_id: req.user.id, title: serviceOnly ? 'درخواست خدمت ثبت شد' : 'سفارش ثبت شد', body: serviceOnly ? `درخوا…8137 tokens truncated…arsed.data.workingHours || parseJson(currentProfile?.working_hours, {})),
+    await trx.insertInto('notifications').values({ id: uuid(), user_id: req.user.id, title: serviceOnly ? 'درخواست خدمت ثبت شد' : 'سفارش ثبت شد', body: serviceOnly ? `درخواست ${number} ثبت شد و در انتظار بررسی کارشناسی است.` : `سفارش ${number} ثبت شد و در انتظار پرداخت است.`, read_at: null, created_at: createdAt }).execute();
+    await trx.deleteFrom('customer_cart_items').where('user_id', '=', req.user.id).execute();
+  });
+  await audit(req, 'order_created', 'order', id);
+  res.status(201).json({ id, orderNo: number, total, subtotal, taxTotal, discountTotal, reservationExpiresAt });
+}));
+
+app.post('/api/payments/prepare', auth, asyncRoute(async (req, res) => {
+  await expireReservations();
+  const order = await db.selectFrom('orders').selectAll().where('id', '=', req.body?.orderId).where('user_id', '=', req.user.id).executeTakeFirst();
+  if (!order) return jsonError(res, 404, 'سفارش پیدا نشد.');
+  if (!['awaiting_payment', 'paid'].includes(order.status)) return jsonError(res, 409, 'این سفارش در وضعیت قابل پرداخت نیست.');
+  if (order.payment_status === 'paid') return jsonError(res, 409, 'این سفارش قبلاً پرداخت شده است.');
+  if (order.reservation_expires_at && order.reservation_expires_at < now()) return jsonError(res, 409, 'مهلت پرداخت این سفارش به پایان رسیده است.');
+  const existing = await db.selectFrom('payments').selectAll().where('order_id', '=', order.id)
+    .where('status', 'in', ['redirect_ready', 'gateway_disabled']).orderBy('created_at', 'desc').executeTakeFirst();
+  if (existing) return res.json({
+    id: existing.id, amount: order.total, orderNo: order.order_no,
+    gatewayActive: existing.status === 'redirect_ready', gatewayUrl: existing.gateway_url,
+    reused: true, message: 'درخواست پرداخت فعال قبلی بازیابی شد.',
+  });
+  const payment = await preparePayment({ amount: order.total, description: `پرداخت سفارش ${order.order_no}`, mobile: req.user.mobile, orderId: order.id });
+  const id = uuid();
+  await db.insertInto('payments').values({ id, user_id: req.user.id, order_id: order.id, amount: order.total, provider: payment.provider, status: payment.active ? 'redirect_ready' : 'gateway_disabled', authority: payment.authority, gateway_url: payment.gatewayUrl, created_at: now() }).execute();
+  await audit(req, 'payment_prepared', 'payment', id);
+  res.json({
+    id, amount: order.total, orderNo: order.order_no,
+    gatewayActive: payment.active, gatewayUrl: payment.gatewayUrl,
+    message: payment.active ? 'درخواست پرداخت آماده است.' : 'تا مرحله اتصال به درگاه آماده شد؛ در نسخه آفلاین ورود به درگاه غیرفعال است.',
+  });
+}));
+
+app.get('/api/orders/:id/payment-status', auth, asyncRoute(async (req, res) => {
+  const order = await db.selectFrom('orders').selectAll().where('id', '=', req.params.id)
+    .where('user_id', '=', req.user.id).executeTakeFirst();
+  if (!order) return jsonError(res, 404, 'سفارش پیدا نشد.');
+  const payment = await db.selectFrom('payments').selectAll().where('order_id', '=', order.id)
+    .where('user_id', '=', req.user.id).orderBy('created_at', 'desc').executeTakeFirst();
+  res.json({
+    orderId: order.id, orderNo: order.order_no, orderStatus: order.status,
+    paymentStatus: order.payment_status || payment?.status || 'pending',
+    reservationExpiresAt: order.reservation_expires_at,
+    payment: payment ? {
+      id: payment.id, status: payment.status, provider: payment.provider,
+      transactionId: payment.transaction_id, failureReason: payment.failure_reason,
+      amount: payment.amount, paidAt: payment.paid_at, createdAt: payment.created_at,
+    } : null,
+  });
+}));
+
+app.get('/api/payments/callback', asyncRoute(async (req, res) => {
+  const authority = String(req.query.Authority || req.query.authority || '');
+  const status = String(req.query.Status || req.query.status || '').toUpperCase();
+  const payment = await db.selectFrom('payments').selectAll().where('authority', '=', authority).executeTakeFirst();
+  if (!authority || !payment) return jsonError(res, 400, 'Callback پرداخت معتبر نیست.');
+  if (status !== 'OK') {
+    await db.updateTable('payments').set({ status: 'failed', failure_reason: 'لغو یا رد در درگاه', updated_at: now() })
+      .where('id', '=', payment.id).where('status', 'not in', ['paid', 'processing']).execute();
+    return res.redirect(`${process.env.CUSTOMER_PAYMENT_RESULT_URL || '/customer.html#/payment/result'}?status=failed`);
+  }
+  try {
+    const verified = await verifyPayment({ authority, amount: payment.amount });
+    const result = await finalizeSuccessfulPayment({ paymentId: payment.id, transactionId: verified.transactionId });
+    return res.redirect(`${process.env.CUSTOMER_PAYMENT_RESULT_URL || '/customer.html#/payment/result'}?status=success&order=${encodeURIComponent(result.order.id)}`);
+  } catch (error) {
+    await db.updateTable('payments').set({
+      status: 'unknown', reconciliation_status: 'required',
+      failure_reason: 'تأیید قطعی درگاه نیازمند تطبیق مجدد است.', updated_at: now(),
+    }).where('id', '=', payment.id).where('status', 'not in', ['paid', 'processing']).execute();
+    return res.redirect(`${process.env.CUSTOMER_PAYMENT_RESULT_URL || '/customer.html#/payment/result'}?status=failed`);
+  }
+}));
+
+app.post('/api/sales/payments/:id/confirm-offline', auth, salesOnly, requireSalesPermission('orders.manage'), asyncRoute(async (req, res) => {
+  if ((process.env.PAYMENT_PROVIDER || 'disabled') !== 'disabled') {
+    return jsonError(res, 403, 'ثبت پرداخت آفلاین فقط در حالت درگاه غیرفعال مجاز است.');
+  }
+  const parsed = z.object({ reference: z.string().trim().min(3).max(100) }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'شناسه رسید آفلاین را وارد کنید.');
+  const result = await finalizeSuccessfulPayment({
+    paymentId: req.params.id, transactionId: `OFFLINE-${parsed.data.reference}`, actorId: req.user.id,
+  });
+  await audit(req, 'offline_payment_confirmed', 'payment', req.params.id, { orderId: result.order.id });
+  res.json({ ok: true, orderId: result.order.id, alreadyProcessed: result.alreadyProcessed });
+}));
+
+app.get('/api/consultations', auth, asyncRoute(async (req, res) => {
+  res.json(await db.selectFrom('consultations').selectAll().where('user_id', '=', req.user.id).orderBy('created_at', 'desc').execute());
+}));
+app.post('/api/consultations', auth, asyncRoute(async (req, res) => {
+  const parsed = z.object({ subject: z.string().min(3), description: z.string().min(10) }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'موضوع و شرح درخواست را کامل کنید.', parsed.error.flatten().fieldErrors);
+  const id = uuid();
+  await db.insertInto('consultations').values({ id, user_id: req.user.id, ...parsed.data, status: 'new', created_at: now() }).execute();
+  await audit(req, 'consultation_created', 'consultation', id);
+  res.status(201).json({ id });
+}));
+
+app.get('/api/quotes', auth, asyncRoute(async (req, res) => {
+  res.json(await db.selectFrom('quotes').selectAll().where('user_id', '=', req.user.id).orderBy('created_at', 'desc').execute());
+}));
+app.get('/api/projects', auth, asyncRoute(async (req, res) => {
+  res.json(await db.selectFrom('projects').selectAll().where('user_id', '=', req.user.id).orderBy('created_at', 'desc').execute());
+}));
+app.get('/api/payments', auth, asyncRoute(async (req, res) => {
+  res.json(await db.selectFrom('payments').selectAll().where('user_id', '=', req.user.id).orderBy('created_at', 'desc').execute());
+}));
+
+// The pre-v5 support API is intentionally retired. Keeping those handlers alive
+// bypassed message visibility, idempotency, state-machine and abuse controls.
+// Clients must use /api/support/tickets and its nested routes.
+app.all('/api/support', auth, (_req, res) => jsonError(res, 410, 'این مسیر قدیمی حذف شده است؛ نسخه جدید گفتگو را باز کنید.'));
+app.all('/api/support/:id/messages', auth, (_req, res) => jsonError(res, 410, 'این مسیر قدیمی حذف شده است؛ نسخه جدید گفتگو را باز کنید.'));
+
+app.post('/api/notifications/read-all', auth, asyncRoute(async (req, res) => {
+  await db.updateTable('notifications').set({ read_at: now() }).where('user_id', '=', req.user.id).where('read_at', 'is', null).execute();
+  res.json({ ok: true });
+}));
+app.get('/api/notifications', auth, asyncRoute(async (req, res) => {
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit || 30)));
+  res.json(await db.selectFrom('notifications').selectAll().where('user_id', '=', req.user.id)
+    .orderBy('created_at', 'desc').limit(limit).execute());
+}));
+app.patch('/api/notifications/:id/read', auth, asyncRoute(async (req, res) => {
+  const result = await db.updateTable('notifications').set({ read_at: now() })
+    .where('id', '=', req.params.id).where('user_id', '=', req.user.id).executeTakeFirst();
+  if (!Number(result.numUpdatedRows || 0)) return jsonError(res, 404, 'اعلان پیدا نشد.');
+  res.json({ ok: true });
+}));
+
+app.get('/api/admin/summary', auth, adminOnly, asyncRoute(async (_req, res) => {
+  const [users, orders, consultations, tickets, revenue, customerRows] = await Promise.all([
+    db.selectFrom('users').select(({ fn }) => fn.countAll().as('count')).executeTakeFirst(),
+    db.selectFrom('orders').select(({ fn }) => fn.countAll().as('count')).executeTakeFirst(),
+    db.selectFrom('consultations').select(({ fn }) => fn.countAll().as('count')).executeTakeFirst(),
+    db.selectFrom('support_tickets').select(({ fn }) => fn.countAll().as('count')).executeTakeFirst(),
+    db.selectFrom('orders').select(({ fn }) => fn.sum('total').as('total')).executeTakeFirst(),
+    db.selectFrom('users').leftJoin('profiles', 'profiles.user_id', 'users.id')
+      .leftJoin('portal_credentials', 'portal_credentials.user_id', 'users.id')
+      .selectAll('profiles').select('portal_credentials.username')
+      .where('users.role', '=', 'customer').execute(),
+  ]);
+  const completions = customerRows.map(row => profileCompletion(row, row.username));
+  res.json({
+    users: Number(users.count), orders: Number(orders.count),
+    consultations: Number(consultations.count), tickets: Number(tickets.count),
+    orderValue: Number(revenue.total || 0),
+    profiles: {
+      complete: completions.filter(item => item.status === 'complete').length,
+      incomplete: completions.filter(item => item.status === 'incomplete').length,
+      critical: completions.filter(item => item.status === 'critical').length,
+    },
+  });
+}));
+app.get('/api/admin/orders', auth, adminOnly, asyncRoute(async (_req, res) => {
+  res.json(await db.selectFrom('orders').innerJoin('users', 'users.id', 'orders.user_id').leftJoin('profiles', 'profiles.user_id', 'users.id').select(['orders.id', 'orders.order_no', 'orders.status', 'orders.total', 'orders.created_at', 'users.mobile', 'profiles.full_name']).orderBy('orders.created_at', 'desc').limit(100).execute());
+}));
+app.patch('/api/admin/orders/:id', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({
+    status: z.enum(['awaiting_payment', 'paid', 'reviewing', 'confirmed', 'preparing', 'ready_to_ship', 'shipped', 'delivered', 'cancelled', 'return_requested', 'returned', 'refund_requested', 'refunded', 'processing']),
+    note: z.string().max(500).optional(),
+  }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'وضعیت سفارش معتبر نیست.');
+  const order = await db.selectFrom('orders').selectAll().where('id', '=', req.params.id).executeTakeFirst();
+  if (!order) return jsonError(res, 404, 'سفارش پیدا نشد.');
+  await changeOrderStatus(req, order, parsed.data.status, parsed.data.note);
+  res.json({ ok: true });
+}));
+app.get('/api/admin/consultations', auth, adminOnly, asyncRoute(async (_req, res) => {
+  res.json(await db.selectFrom('consultations').innerJoin('users', 'users.id', 'consultations.user_id').leftJoin('profiles', 'profiles.user_id', 'users.id').select(['consultations.id', 'consultations.subject', 'consultations.status', 'consultations.created_at', 'users.mobile', 'profiles.full_name']).orderBy('consultations.created_at', 'desc').limit(100).execute());
+}));
+app.patch('/api/admin/consultations/:id', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({ status: z.enum(['new', 'reviewing', 'answered', 'closed']) }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'وضعیت درخواست معتبر نیست.');
+  const item = await db.selectFrom('consultations').select(['id', 'user_id', 'subject']).where('id', '=', req.params.id).executeTakeFirst();
+  if (!item) return jsonError(res, 404, 'درخواست پیدا نشد.');
+  await db.transaction().execute(async trx => {
+    await trx.updateTable('consultations').set({ status: parsed.data.status }).where('id', '=', item.id).execute();
+    await trx.insertInto('notifications').values({ id: uuid(), user_id: item.user_id, title: 'وضعیت مشاوره به‌روزرسانی شد', body: `${item.subject}: ${parsed.data.status}`, read_at: null, created_at: now() }).execute();
+  });
+  res.json({ ok: true });
+}));
+app.get('/api/admin/customers', auth, adminOnly, asyncRoute(async (req, res) => {
+  const page = Math.max(1, Number(req.query.page || 1));
+  const limit = Math.min(100, Math.max(10, Number(req.query.limit || 50)));
+  const status = String(req.query.status || '');
+  const query = String(req.query.q || '').trim();
+  let builder = db.selectFrom('users').leftJoin('profiles', 'profiles.user_id', 'users.id')
+    .leftJoin('portal_credentials', 'portal_credentials.user_id', 'users.id')
+    .select([
+      'users.id', 'users.mobile', 'users.status', 'users.created_at',
+      'profiles.full_name', 'profiles.first_name', 'profiles.last_name', 'profiles.display_name',
+      'profiles.email', 'profiles.company', 'profiles.account_type', 'profiles.national_id',
+      'profiles.company_national_id', 'profiles.mobile_verified_at', 'portal_credentials.username',
+    ]).where('users.role', '=', 'customer');
+  if (status) builder = builder.where('users.status', '=', status);
+  const rows = await builder.orderBy('users.created_at', 'desc').limit(limit).offset((page - 1) * limit).execute();
+  const filtered = query
+    ? rows.filter(row => `${row.full_name || ''} ${row.mobile} ${row.email || ''} ${row.company || ''}`.includes(query))
+    : rows;
+  res.json(filtered.map(row => ({ ...row, profileCompletion: profileCompletion(row, row.username) })));
+}));
+app.patch('/api/admin/customers/:id', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({
+    status: z.enum(['active', 'suspended', 'blocked', 'pending']).optional(),
+    full_name: z.string().trim().min(2).max(100).optional(),
+    email: z.union([z.string().email(), z.literal('')]).optional(),
+    reason: z.string().trim().min(5).max(500),
+  }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'اطلاعات تغییر مشتری و دلیل آن را کامل کنید.');
+  const customer = await db.selectFrom('users').selectAll().where('id', '=', req.params.id).where('role', '=', 'customer').executeTakeFirst();
+  if (!customer) return jsonError(res, 404, 'مشتری پیدا نشد.');
+  await db.transaction().execute(async trx => {
+    if (parsed.data.status) await trx.updateTable('users').set({ status: parsed.data.status }).where('id', '=', customer.id).execute();
+    const profileChanges = {};
+    if (parsed.data.full_name !== undefined) profileChanges.full_name = parsed.data.full_name;
+    if (parsed.data.email !== undefined) profileChanges.email = parsed.data.email.toLowerCase();
+    if (Object.keys(profileChanges).length) {
+      profileChanges.updated_at = now();
+      await trx.updateTable('profiles').set(profileChanges).where('user_id', '=', customer.id).execute();
+    }
+    if (parsed.data.status && parsed.data.status !== 'active') {
+      await trx.deleteFrom('sessions').where('user_id', '=', customer.id).execute();
+    }
+  });
+  await audit(req, 'customer_updated_by_admin', 'user', customer.id, {
+    reason: parsed.data.reason, fields: Object.keys(parsed.data).filter(key => key !== 'reason'),
+  });
+  res.json({ ok: true });
+}));
+app.get('/api/admin/audit-log', auth, adminOnly, asyncRoute(async (req, res) => {
+  const limit = Math.min(200, Math.max(10, Number(req.query.limit || 100)));
+  res.json(await db.selectFrom('audit_events')
+    .leftJoin('profiles', 'profiles.user_id', 'audit_events.user_id')
+    .select([
+      'audit_events.id', 'audit_events.user_id', 'audit_events.action',
+      'audit_events.entity_type', 'audit_events.entity_id', 'audit_events.ip',
+      'audit_events.metadata', 'audit_events.created_at', 'profiles.full_name',
+    ]).orderBy('audit_events.created_at', 'desc').limit(limit).execute());
+}));
+app.post('/api/admin/quotes', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({ userId: z.string(), title: z.string().min(3), amount: z.number().int().min(0), validUntil: z.string().optional() }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'اطلاعات پیش‌فاکتور معتبر نیست.', parsed.error.flatten().fieldErrors);
+  const customer = await db.selectFrom('users').select('id').where('id', '=', parsed.data.userId).where('role', '=', 'customer').executeTakeFirst();
+  if (!customer) return jsonError(res, 404, 'مشتری پیدا نشد.');
+  const id = uuid(); const number = orderNo('QT');
+  await db.transaction().execute(async trx => {
+    await trx.insertInto('quotes').values({ id, user_id: customer.id, quote_no: number, title: parsed.data.title, amount: parsed.data.amount, status: 'approved', valid_until: parsed.data.validUntil || null, created_at: now() }).execute();
+    await trx.insertInto('notifications').values({ id: uuid(), user_id: customer.id, title: 'پیش‌فاکتور جدید', body: `پیش‌فاکتور ${number} برای شما صادر شد.`, read_at: null, created_at: now() }).execute();
+  });
+  await audit(req, 'quote_created', 'quote', id);
+  res.status(201).json({ id, quoteNo: number });
+}));
+app.post('/api/admin/projects', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({ userId: z.string(), title: z.string().min(3) }).safeParse(req.body);
+  if (!parsed.success) return jsonError(res, 400, 'اطلاعات پروژه معتبر نیست.');
+  const customer = await db.selectFrom('users').select('id').where('id', '=', parsed.data.userId).where('role', '=', 'customer').executeTakeFirst();
+  if (!customer) return jsonError(res, 404, 'مشتری پیدا نشد.');
+  const id = uuid();
+  await db.transaction().execute(async trx => {
+    await trx.insertInto('projects').values({ id, user_id: parsed.data.userId, title: parsed.data.title, status: 'planning', progress: 0, created_at: now() }).execute();
+    await trx.insertInto('notifications').values({ id: uuid(), user_id: parsed.data.userId, title: 'پروژه جدید', body: `پروژه «${parsed.data.title}» به حساب شما افزوده شد.`, read_at: null, created_at: now() }).execute();
+  });
+  res.status(201).json({ id });
+}));
+app.get('/api/admin/support-agents', auth, adminOnly, asyncRoute(async (_req, res) => {
+  const rows = await db.selectFrom('admin_members')
+    .innerJoin('users', 'users.id', 'admin_members.user_id')
+    .leftJoin('profiles', 'profiles.user_id', 'users.id')
+    .leftJoin('portal_credentials', 'portal_credentials.user_id', 'users.id')
+    .select([
+      'users.id', 'users.mobile', 'users.status', 'users.created_at',
+      'profiles.full_name', 'profiles.email', 'profiles.job_title', 'profiles.avatar_url', 'admin_members.permissions',
+      'portal_credentials.username',
+    ])
+    .where('admin_members.section', '=', 'support')
+    .orderBy('users.created_at', 'desc').execute();
+  const [workloads, memberships, agentProfiles, skillRows, teams] = await Promise.all([
+    db.selectFrom('support_assignments').innerJoin('support_tickets', 'support_tickets.id', 'support_assignments.ticket_id')
+      .select(['support_assignments.agent_id', 'support_tickets.status']).execute(),
+    db.selectFrom('support_team_members').innerJoin('support_teams', 'support_teams.id', 'support_team_members.team_id')
+      .select(['support_team_members.agent_id', 'support_team_members.team_id', 'support_team_members.is_primary', 'support_teams.name']).execute(),
+    db.selectFrom('support_agent_profiles').selectAll().execute(),
+    db.selectFrom('support_agent_skills').innerJoin('support_skills', 'support_skills.id', 'support_agent_skills.skill_id')
+      .select(['support_agent_skills.agent_id', 'support_agent_skills.skill_id', 'support_agent_skills.level', 'support_skills.name', 'support_skills.slug']).execute(),
+    db.selectFrom('support_teams').selectAll().where('status', '=', 'active').orderBy('name').execute(),
+  ]);
+  res.json(rows.map(row => ({
+    ...row,
+    permissions: readPermissions(row.permissions),
+    assigned: workloads.filter(item => item.agent_id === row.id).length,
+    open: workloads.filter(item => item.agent_id === row.id && !['resolved', 'closed'].includes(item.status)).length,
+    teams: memberships.filter(item => item.agent_id === row.id),
+    primaryTeamId: memberships.find(item => item.agent_id === row.id && Number(item.is_primary))?.team_id || null,
+    supportProfile: agentProfiles.find(item => item.agent_id === row.id) || null,
+    skills: skillRows.filter(item => item.agent_id === row.id),
+  })).map((item, _index, all) => ({ ...item, availableTeams: teams, agentsCount: all.length })));
+}));
+
+app.post('/api/admin/support-agents', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({
+    mobile: z.string(), fullName: z.string().trim().min(2).max(100),
+    username: z.string().trim().regex(/^[A-Za-z][A-Za-z0-9._-]{3,39}$/),
+    temporaryPassword: z.string().min(10).max(128),
+    jobTitle: z.string().trim().min(2).max(100),
+    avatarUrl: z.string().trim().max(500).nullable().optional(),
+    topicIds: z.array(z.enum(SUPPORT_TOPIC_IDS)).min(1).max(SUPPORT_TOPIC_IDS.length),
+    teamIds: z.array(z.string()).max(20).optional().default([]),
+    primaryTeamId: z.string().optional().default(''),
+    languages: z.array(z.string().trim().min(2).max(10)).min(1).max(10).default(['fa']),
+    workingHours: z.record(z.string(), z.array(z.tuple([z.string(), z.string()]))).default({}),
+    timezone: z.string().min(3).max(80).default('Asia/Tehran'),
+    capacity: z.number().int().min(1).max(8).default(8),
+    seniority: z.enum(['junior', 'mid', 'senior', 'lead']).default('mid'),
+    permissions: z.record(z.string(), z.boolean()),
+  }).safeParse(req.body);
+  if (!parsed.success || !passwordIsStrong(parsed.data?.temporaryPassword)) return jsonError(res, 400, 'رمز موقت باید شامل حروف بزرگ، کوچک، عدد و نماد باشد.', parsed.error?.flatten().fieldErrors);
+  if (new Set(parsed.data.topicIds).size !== parsed.data.topicIds.length) return jsonError(res, 400, 'موضوعات تخصصی تکراری هستند.');
+  const unknownPermissions = Object.keys(parsed.data.permissions).filter(key => !SUPPORT_PERMISSION_KEYS.includes(key));
+  if (unknownPermissions.length) return jsonError(res, 400, 'یک یا چند مجوز پشتیبانی معتبر نیست.');
+  const mobile = normalizeMobile(parsed.data.mobile);
+  if (!/^09\d{9}$/.test(mobile)) return jsonError(res, 400, 'شماره همراه پشتیبان معتبر نیست.');
+  let user = await db.selectFrom('users').selectAll().where('mobile', '=', mobile).executeTakeFirst();
+  if (user && ['admin', 'super_admin'].includes(user.role)) return jsonError(res, 409, 'این شماره متعلق به مدیر اصلی است.');
+  const userId = user?.id || uuid();
+  await db.transaction().execute(async trx => {
+    if (!user) {
+      await trx.insertInto('users').values({ id: userId, mobile, role: 'support_agent', status: 'active', created_at: now() }).execute();
+      await trx.insertInto('profiles').values({ user_id: userId, full_name: parsed.data.fullName, email: null, national_id: null, company: 'راهکار', job_title: parsed.data.jobTitle, avatar_url: parsed.data.avatarUrl || null, updated_at: now() }).execute();
+    } else {
+      await trx.updateTable('users').set({ role: 'support_agent', status: 'active', token_version: sql`COALESCE(token_version, 0) + 1` }).where('id', '=', userId).execute();
+      await trx.deleteFrom('sessions').where('user_id', '=', userId).execute();
+      await trx.updateTable('profiles').set({ full_name: parsed.data.fullName, job_title: parsed.data.jobTitle, avatar_url: parsed.data.avatarUrl || null, updated_at: now() }).where('user_id', '=', userId).execute();
+    }
+    await trx.insertInto('admin_members').values({
+      user_id: userId, section: 'support', permissions: JSON.stringify(parsed.data.permissions),
+      created_by: req.user.id, updated_at: now(),
+    }).onConflict(oc => oc.column('user_id').doUpdateSet({
+      section: 'support', permissions: JSON.stringify(parsed.data.permissions),
+      created_by: req.user.id, updated_at: now(),
+    })).execute();
+    await trx.insertInto('portal_credentials').values({
+      user_id: userId,
+      username: parsed.data.username,
+      password_hash: passwordHash(parsed.data.temporaryPassword),
+      must_change: 1,
+      temporary_expires_at: later(24 * 60),
+      updated_at: now(),
+    }).onConflict(oc => oc.column('user_id').doUpdateSet({
+      username: parsed.data.username,
+      password_hash: passwordHash(parsed.data.temporaryPassword),
+      must_change: 1,
+      temporary_expires_at: later(24 * 60),
+      updated_at: now(),
+      })).execute();
+    await trx.insertInto('support_agent_profiles').values({
+      agent_id: userId, avatar_url: parsed.data.avatarUrl || null, title: parsed.data.jobTitle,
+      languages: JSON.stringify(parsed.data.languages), seniority: parsed.data.seniority,
+      timezone: parsed.data.timezone, working_hours: JSON.stringify(parsed.data.workingHours),
+      capacity: parsed.data.capacity, presence_status: 'offline', last_heartbeat_at: null,
+      last_seen_at: null, created_at: now(), updated_at: now(),
+    }).onConflict(oc => oc.column('agent_id').doUpdateSet({
+      avatar_url: parsed.data.avatarUrl || null, title: parsed.data.jobTitle,
+      languages: JSON.stringify(parsed.data.languages), seniority: parsed.data.seniority,
+      timezone: parsed.data.timezone, working_hours: JSON.stringify(parsed.data.workingHours),
+      capacity: parsed.data.capacity, updated_at: now(),
+    })).execute();
+    await trx.deleteFrom('support_team_members').where('agent_id', '=', userId).execute();
+    await trx.deleteFrom('support_agent_skills').where('agent_id', '=', userId).execute();
+    for (const topicId of parsed.data.topicIds) await trx.insertInto('support_agent_skills').values({
+      agent_id: userId, skill_id: `support-topic-${topicId}`, level: 5, created_at: now(),
+    }).execute();
+  });
+  await audit(req, 'support_agent_saved', 'user', userId);
+  await requestSupportRebalance();
+  let smsSent = false;
+  let smsWarning = null;
+  try {
+    const delivery = await sendAdminWelcome({
+      mobile, username: parsed.data.username,
+      temporaryPassword: parsed.data.temporaryPassword, portal: 'support',
+    });
+    smsSent = Boolean(delivery.delivered);
+    if (!smsSent) smsWarning = 'حساب ساخته شد، اما سرویس پیامک در این محیط غیرفعال است.';
+    await audit(req, smsSent ? 'support_agent_welcome_sms_sent' : 'support_agent_welcome_sms_skipped', 'user', userId);
+  } catch (error) {
+    console.error('Support welcome SMS failed:', error.message);
+    smsWarning = 'حساب ساخته شد، اما ارسال پیامک ورود اول ناموفق بود؛ تنظیمات پیامک را بررسی و رمز موقت را دوباره تعیین کنید.';
+    await audit(req, 'support_agent_welcome_sms_failed', 'user', userId, { providerStatus: error.providerStatus || null });
+  }
+  res.status(201).json({ id: userId, smsSent, smsWarning });
+}));
+
+app.patch('/api/admin/support-agents/:id', auth, adminOnly, asyncRoute(async (req, res) => {
+  const parsed = z.object({
+    status: z.enum(['active', 'suspended', 'retired']).optional(),
+    username: z.string().trim().regex(/^[A-Za-z][A-Za-z0-9._-]{3,39}$/).optional(),
+    password: z.string().min(10).max(128).optional(),
+    fullName: z.string().trim().min(2).max(100).optional(),
+    jobTitle: z.string().trim().min(2).max(100).optional(),
+    avatarUrl: z.string().trim().max(500).nullable().optional(),
+    topicIds: z.array(z.enum(SUPPORT_TOPIC_IDS)).min(1).max(SUPPORT_TOPIC_IDS.length).optional(),
+    languages: z.array(z.string().trim().min(2).max(10)).min(1).max(10).optional(),
+    workingHours: z.record(z.string(), z.array(z.tuple([z.string(), z.string()]))).optional(),
+    timezone: z.string().min(3).max(80).optional(),
+    capacity: z.number().int().min(1).max(8).optional(),
+    seniority: z.enum(['junior', 'mid', 'senior', 'lead']).optional(),
+    permissions: z.record(z.string(), z.boolean()).optional(),
+  }).safeParse(req.body);
+  if (!parsed.success || (parsed.data?.password && !passwordIsStrong(parsed.data.password))) return jsonError(res, 400, 'تنظیمات پشتیبان یا قدرت رمز معتبر نیست.');
+  const member = await db.selectFrom('admin_members').selectAll().where('user_id', '=', req.params.id).where('section', '=', 'support').executeTakeFirst();
+  if (!member) return jsonError(res, 404, 'پشتیبان پیدا نشد.');
+  if (parsed.data.permissions && Object.keys(parsed.data.permissions).some(key => !SUPPORT_PERMISSION_KEYS.includes(key))) return jsonError(res, 400, 'یک یا چند مجوز پشتیبانی معتبر نیست.');
+  if (parsed.data.topicIds && new Set(parsed.data.topicIds).size !== parsed.data.topicIds.length) return jsonError(res, 400, 'موضوعات تخصصی تکراری هستند.');
+  await db.transaction().execute(async trx => {
+    if (parsed.data.status) {
+      await trx.updateTable('users').set({ status: parsed.data.status, token_version: sql`COALESCE(token_version, 0) + 1` }).where('id', '=', req.params.id).execute();
+      await trx.deleteFrom('sessions').where('user_id', '=', req.params.id).execute();
+    }
+    if (parsed.data.permissions) await trx.updateTable('admin_members').set({ permissions: JSON.stringify(parsed.data.permissions), updated_at: now() }).where('user_id', '=', req.params.id).execute();
+    if (parsed.data.fullName || parsed.data.jobTitle || parsed.data.avatarUrl !== undefined) {
+      const profileChanges = { updated_at: now() };
+      if (parsed.data.fullName) profileChanges.full_name = parsed.data.fullName;
+      if (parsed.data.jobTitle) profileChanges.job_title = parsed.data.jobTitle;
+      if (parsed.data.avatarUrl !== undefined) profileChanges.avatar_url = parsed.data.avatarUrl || null;
+      await trx.updateTable('profiles').set(profileChanges).where('user_id', '=', req.params.id).execute();
+    }
+    if (parsed.data.topicIds) {
+      await trx.deleteFrom('support_agent_skills').where('agent_id', '=', req.params.id).execute();
+      for (const topicId of parsed.data.topicIds) await trx.insertInto('support_agent_skills').values({
+        agent_id: req.params.id, skill_id: `support-topic-${topicId}`, level: 5, created_at: now(),
+      }).execute();
+    }
+    if (parsed.data.jobTitle || parsed.data.avatarUrl !== undefined || parsed.data.languages || parsed.data.workingHours || parsed.data.timezone || parsed.data.capacity || parsed.data.seniority) {
+      const currentProfile = await trx.selectFrom('support_agent_profiles').selectAll().where('agent_id', '=', req.params.id).executeTakeFirst();
+      const profileValues = {
+        agent_id: req.params.id, avatar_url: parsed.data.avatarUrl ?? currentProfile?.avatar_url ?? null,
+        title: parsed.data.jobTitle || currentProfile?.title || 'کارشناس پشتیبانی',
+        languages: JSON.stringify(parsed.data.languages || parseJson(currentProfile?.languages, ['fa'])),
+        seniority: parsed.data.seniority || currentProfile?.seniority || 'mid',
+        timezone: parsed.data.timezone || currentProfile?.timezone || 'Asia/Tehran',
+        working_hours: JSON.stringify(parsed.data.workingHours || parseJson(currentProfile?.working_hours, {})),
         capacity: parsed.data.capacity || currentProfile?.capacity || 8,
         presence_status: currentProfile?.presence_status || 'offline',
         last_heartbeat_at: currentProfile?.last_heartbeat_at || null, last_seen_at: currentProfile?.last_seen_at || null,
@@ -3550,7 +3989,10 @@ export async function ready() {
     if (!/^\d+$/.test(String(process.env.TRUST_PROXY_HOPS || ''))) {
       throw new Error('TRUST_PROXY_HOPS باید در Production دقیقاً مطابق تعداد Proxyهای مورد اعتماد تنظیم شود.');
     }
-    if (!String(process.env.CLAMAV_HOST || process.env.CLAMAV_COMMAND || '').trim()) {
+    // Vercel functions cannot run or reach a local ClamAV daemon. Upload routes
+    // still fail closed when no scanner is configured; do not crash unrelated
+    // pages and authentication during server startup.
+    if (!isVercel() && !String(process.env.CLAMAV_HOST || process.env.CLAMAV_COMMAND || '').trim()) {
       throw new Error('سرویس ClamAV برای اسکن اجباری پیوست‌ها در Production تنظیم نشده است.');
     }
     if (String(process.env.HEALTHCHECK_TOKEN || '').length < 24) {
