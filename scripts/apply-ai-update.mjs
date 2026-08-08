@@ -69,21 +69,31 @@ const consultationHtml = `<!doctype html>
   <style>
     :root{color-scheme:light;--blue:#0f4fcb;--cyan:#06b6d4;--dark:#061d37;--ink:#0f172a;--muted:#64748b;--line:#dbeafe;--bg:#eef7ff;--card:#fff;--font:'Vazirmatn','IRANSans','Segoe UI',Tahoma,Arial,sans-serif}
     *{box-sizing:border-box}html,body,input,select,textarea,button,a,label{font-family:var(--font)!important}body{margin:0;background:radial-gradient(circle at top right,#dff8ff,transparent 34%),linear-gradient(135deg,#eff6ff,#f8fafc);color:var(--ink);min-height:100vh}button,input,select,textarea{font:inherit!important;letter-spacing:0}::placeholder{font-family:var(--font);color:#94a3b8}.wrap{max-width:1120px;margin:0 auto;padding:28px 18px 56px}.top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:26px}.brand{font-weight:900;font-size:24px;color:var(--blue)}.back{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 16px;color:var(--blue);text-decoration:none;font-weight:800}.hero{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:stretch}.panel{background:rgba(255,255,255,.92);border:1px solid var(--line);box-shadow:0 24px 70px rgba(37,99,235,.13);border-radius:28px;padding:28px}.dark{background:linear-gradient(145deg,#061d37,#0d355d);color:#fff}.dark p{color:#dbeafe}.hero h1{font-size:clamp(30px,5vw,56px);line-height:1.35;margin:0 0 14px;font-weight:900}.hero p{color:var(--muted);line-height:2;font-size:16px}.badge{display:inline-flex;gap:8px;align-items:center;background:#e0f2fe;color:#075985;border-radius:999px;padding:8px 13px;font-weight:900;margin-bottom:14px}.form{display:grid;gap:14px}.field{display:grid;gap:7px}.field label{font-weight:900;color:#0f172a}.field input,.field select,.field textarea{width:100%;border:1px solid #cbd5e1;border-radius:16px;padding:13px 14px;background:#fff;color:var(--ink);outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:#0f4fcb;box-shadow:0 0 0 4px rgba(15,79,203,.11)}.field textarea{min-height:130px;resize:vertical}.hint{color:var(--muted);font-size:13px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.send{border:0;border-radius:18px;padding:15px 18px;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;font-weight:900;cursor:pointer;box-shadow:0 16px 35px rgba(37,99,235,.25)}.result{display:none;margin-top:16px;border:1px solid #bae6fd;background:#f0f9ff;border-radius:20px;padding:18px;line-height:2}.result.show{display:block}.result.error{border-color:#fecaca;background:#fff1f2;color:#9f1239}.cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.cta a{border-radius:999px;padding:10px 15px;text-decoration:none;font-weight:900}.primary{background:var(--blue);color:#fff}.secondary{background:#fff;color:var(--blue);border:1px solid var(--line)}.native-file{position:absolute;inline-size:1px;block-size:1px;opacity:0;pointer-events:none}.file-picker{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px dashed #93c5fd;border-radius:16px;background:#f8fbff;padding:13px 14px;cursor:pointer;color:#0f4fcb;font-weight:900}.file-picker small{font-weight:700;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-picker span{background:#dbeafe;border-radius:999px;padding:7px 12px;white-space:nowrap}.error-text{color:#dc2626;font-size:13px;font-weight:800;display:none}.field.invalid .error-text{display:block}.field.invalid input,.field.invalid select,.field.invalid textarea{border-color:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.08)}
-    @media(max-width:850px){.hero{grid-template-columns:1fr}.row{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.panel{padding:22px}.file-picker{align-items:flex-start;flex-direction:column}}
+    .chat-screen{display:none;max-width:920px;margin:0 auto}.chat-screen.show{display:block}.chat-card{background:#fff;border:1px solid var(--line);border-radius:28px;box-shadow:0 24px 70px rgba(37,99,235,.13);overflow:hidden}.chat-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;background:linear-gradient(135deg,#061d37,#0d355d);color:#fff}.chat-head b,.chat-head small{display:block}.chat-head small{color:#bae6fd;margin-top:4px}.quota{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:8px 13px;font-weight:800;white-space:nowrap}.messages{height:min(58vh,560px);min-height:390px;overflow:auto;padding:24px;background:#f8fbff;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}.message{max-width:min(82%,680px);padding:14px 16px;border-radius:18px;line-height:1.95;white-space:pre-wrap}.message.ai{align-self:flex-start;background:#fff;border:1px solid #dbeafe;border-bottom-right-radius:5px}.message.user{align-self:flex-end;background:#0f4fcb;color:#fff;border-bottom-left-radius:5px}.message.pending{color:#64748b}.chat-form{display:flex;gap:10px;padding:16px 20px;border-top:1px solid var(--line);background:#fff}.chat-form textarea{flex:1;min-height:52px;max-height:130px;resize:vertical;border:1px solid #cbd5e1;border-radius:16px;padding:13px 14px;outline:none}.chat-form textarea:focus{border-color:#0f4fcb;box-shadow:0 0 0 4px rgba(15,79,203,.11)}.chat-form button{min-width:110px;border:0;border-radius:16px;background:var(--blue);color:#fff;font-weight:900;padding:0 18px}.chat-form button:disabled,.send:disabled{opacity:.55;cursor:not-allowed}.limit-box{display:none;padding:20px 24px;background:#eff6ff;border-top:1px solid #bfdbfe}.limit-box.show{display:block}.limit-box h2{font-size:20px;margin:0 0 7px}.limit-box p{color:#475569;line-height:1.8;margin:0}.limit-box .cta{margin-top:12px}.chat-error{display:none;margin:12px 20px 0;padding:11px 13px;border-radius:13px;background:#fff1f2;color:#9f1239;border:1px solid #fecaca}.chat-error.show{display:block}
+    @media(max-width:850px){.hero{grid-template-columns:1fr}.row{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.panel{padding:22px}.file-picker{align-items:flex-start;flex-direction:column}.chat-head{align-items:flex-start}.messages{height:55vh;padding:16px}.message{max-width:92%}.chat-form{flex-direction:column}.chat-form button{min-height:48px}}
   </style>
 </head>
 <body>
   <main class="wrap">
     <div class="top"><div class="brand">راهکار</div><a class="back" href="/">بازگشت به صفحه اصلی</a></div>
     <section class="hero">
-      <div class="panel dark"><span class="badge">مشاوره اولیه AI</span><h1>با هوش مصنوعی گفت‌وگو کنید.</h1><p>مسئله سازمانی، وضعیت فعلی و نیاز خود را بنویسید تا یک جمع‌بندی اولیه و مسیر پیشنهادی دریافت کنید. برای بررسی تخصصی‌تر، ثبت‌نام را تکمیل کنید.</p></div>
+      <div class="panel dark"><span class="badge">مشاوره واقعی هوش مصنوعی</span><h1>مسئله‌تان را با هوش مصنوعی بررسی کنید.</h1><p>اطلاعات اولیه را ثبت کنید تا وارد صفحه گفت‌وگو شوید. دستیار بر اساس توضیحات شما تحلیل واقعی ارائه می‌کند و به سه پرسش تکمیلی پاسخ می‌دهد؛ سپس ادامه مسیر از پنل شخصی شما انجام می‌شود.</p></div>
       <form class="panel form" id="ai-form" novalidate>
         <div class="row"><div class="field"><label for="org">نام سازمان</label><input id="org" name="org" required placeholder="مثلاً شرکت راهکار" /><span class="error-text">لطفاً نام سازمان را وارد کنید.</span></div><div class="field"><label for="phone">شماره تماس</label><input id="phone" name="phone" inputmode="tel" placeholder="09xxxxxxxxx" /></div></div>
         <div class="row"><div class="field"><label for="size">اندازه سازمان</label><select id="size" name="size"><option>کمتر از ۵۰ نفر</option><option>۵۰ تا ۲۰۰ نفر</option><option>بیش از ۲۰۰ نفر</option></select></div><div class="field"><label for="topic">موضوع مشاوره</label><select id="topic" name="topic"><option>طراحی ایجنت‌های هوش مصنوعی</option><option>خودکارسازی فرایند</option><option>داشبورد مدیریتی</option><option>سامانه اختصاصی</option></select></div></div>
         <div class="field"><label for="problem">شرح نیاز</label><textarea id="problem" name="problem" required placeholder="مشکل، فرایند یا ایده‌ای که می‌خواهید هوشمند شود را توضیح دهید..."></textarea><span class="error-text">لطفاً شرح نیاز را وارد کنید.</span></div>
         <div class="field"><label for="files">فایل اختیاری</label><input class="native-file" id="files" name="files" type="file" multiple /><label class="file-picker" for="files"><span>انتخاب فایل</span><small id="file-label">فایلی انتخاب نشده است</small></label><span class="hint">در صورت نیاز می‌توانید نمونه فایل، تصویر یا توضیح تکمیلی بارگذاری کنید.</span></div>
-        <button class="send" type="submit">دریافت پاسخ اولیه</button><div class="result" id="result"></div>
+        <button class="send" type="submit">شروع گفت‌وگوی واقعی</button><div class="result" id="result" role="alert"></div>
       </form>
+    </section>
+    <section class="chat-screen" id="chat-screen" aria-label="گفت‌وگوی مشاوره هوش مصنوعی">
+      <div class="chat-card">
+        <header class="chat-head"><div><b>دستیار هوشمند راهکار</b><small id="chat-context">در حال بررسی مسئله سازمان شما</small></div><span class="quota" id="quota">۳ پرسش باقی‌مانده</span></header>
+        <div class="messages" id="messages" aria-live="polite"></div>
+        <div class="chat-error" id="chat-error" role="alert"></div>
+        <form class="chat-form" id="chat-form"><textarea id="question" required maxlength="2000" placeholder="پرسش تکمیلی خود را بنویسید..."></textarea><button id="chat-send" type="submit">ارسال پرسش</button></form>
+        <div class="limit-box" id="limit-box"><h2>سه پرسش شما پاسخ داده شد</h2><p>برای ادامه بررسی، ذخیره سوابق گفت‌وگو و دریافت راهکار متناسب با سازمانتان ثبت‌نام کنید و وارد پنل شخصی شوید.</p><div class="cta"><a class="primary" href="/#/auth/register">ثبت‌نام و ادامه در پنل</a><a class="secondary" href="/#/auth/login">قبلاً ثبت‌نام کرده‌ام</a></div></div>
+      </div>
     </section>
   </main>
   <script>
@@ -91,6 +101,17 @@ const consultationHtml = `<!doctype html>
     var result = document.getElementById('result');
     var fileInput = document.getElementById('files');
     var fileLabel = document.getElementById('file-label');
+    var hero = document.querySelector('.hero');
+    var chatScreen = document.getElementById('chat-screen');
+    var chatForm = document.getElementById('chat-form');
+    var messages = document.getElementById('messages');
+    var question = document.getElementById('question');
+    var chatSend = document.getElementById('chat-send');
+    var quota = document.getElementById('quota');
+    var limitBox = document.getElementById('limit-box');
+    var chatError = document.getElementById('chat-error');
+    var sessionToken = '';
+    var remainingQuestions = 3;
     fileInput.addEventListener('change', function () {
       var names = Array.prototype.slice.call(fileInput.files || []).map(function (file) { return file.name; });
       fileLabel.textContent = names.length ? names.join('، ') : 'فایلی انتخاب نشده است';
@@ -98,6 +119,27 @@ const consultationHtml = `<!doctype html>
     function showError(message) {
       result.className = 'result show error';
       result.textContent = message;
+    }
+    function addMessage(role, text, pending) {
+      var node = document.createElement('div');
+      node.className = 'message ' + role + (pending ? ' pending' : '');
+      node.textContent = text;
+      messages.appendChild(node);
+      messages.scrollTop = messages.scrollHeight;
+      return node;
+    }
+    function updateQuota(remaining) {
+      remainingQuestions = Number(remaining);
+      quota.textContent = remainingQuestions + ' پرسش باقی‌مانده';
+      if (remainingQuestions <= 0) {
+        chatForm.hidden = true;
+        limitBox.classList.add('show');
+        quota.textContent = 'سهمیه رایگان تکمیل شد';
+      }
+    }
+    function showChatError(message) {
+      chatError.textContent = message;
+      chatError.classList.add('show');
     }
     function validate() {
       var valid = true;
@@ -118,16 +160,54 @@ const consultationHtml = `<!doctype html>
     form.addEventListener('submit', async function (event) {
       event.preventDefault();
       if (!validate()) return;
-      result.className = 'result show';
-      result.textContent = 'در حال آماده‌سازی پاسخ اولیه...';
+      var submit = form.querySelector('.send');
+      submit.disabled = true;
+      submit.textContent = 'در حال دریافت تحلیل واقعی...';
+      result.className = '';
+      result.textContent = '';
       var data = new FormData(form);
       try {
-        var response = await fetch('/api/public-ai/consultation', { method: 'POST', body: data });
-        if (!response.ok) throw new Error('API unavailable');
+        var response = await fetch('/api/public-ai/consultation/start', { method: 'POST', body: data });
         var json = await response.json();
-        result.innerHTML = '<b>پاسخ اولیه:</b><br>' + (json.answer || json.message || 'درخواست شما ثبت شد. برای ادامه، ثبت‌نام را تکمیل کنید.') + '<div class="cta"><a class="primary" href="/#/auth/login">ادامه با ثبت‌نام</a><a class="secondary" href="/">بازگشت</a></div>';
+        if (!response.ok || !json.answer || !json.sessionToken) throw new Error(json.error || 'پاسخ واقعی دریافت نشد.');
+        sessionToken = json.sessionToken;
+        hero.style.display = 'none';
+        chatScreen.classList.add('show');
+        document.getElementById('chat-context').textContent = form.org.value + ' · ' + form.topic.value;
+        addMessage('ai', json.answer);
+        updateQuota(json.remainingQuestions);
+        chatScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        question.focus();
       } catch (error) {
-        result.innerHTML = '<b>جمع‌بندی اولیه:</b><br>برای پیشنهاد دقیق، لازم است فرایند فعلی، داده‌های موجود، نقش کاربران و خروجی مدیریتی مشخص شود. درخواست شما آماده بررسی است؛ برای ادامه ثبت‌نام را تکمیل کنید.<div class="cta"><a class="primary" href="/#/auth/login">ادامه با ثبت‌نام</a><a class="secondary" href="/">بازگشت</a></div>';
+        showError(error.message || 'پاسخ واقعی دریافت نشد. لطفاً دوباره تلاش کنید.');
+      } finally {
+        submit.disabled = false;
+        submit.textContent = 'شروع گفت‌وگوی واقعی';
+      }
+    });
+    chatForm.addEventListener('submit', async function (event) {
+      event.preventDefault();
+      var text = String(question.value || '').trim();
+      if (!text || !sessionToken || remainingQuestions <= 0) return;
+      chatError.classList.remove('show');
+      question.value = '';
+      addMessage('user', text);
+      var pending = addMessage('ai', 'در حال بررسی پرسش شما...', true);
+      chatSend.disabled = true;
+      try {
+        var response = await fetch('/api/public-ai/consultation/message', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionToken: sessionToken, question: text }) });
+        var json = await response.json();
+        if (!response.ok || !json.answer) throw new Error(json.error || 'پاسخ واقعی دریافت نشد.');
+        pending.classList.remove('pending');
+        pending.textContent = json.answer;
+        updateQuota(json.remainingQuestions);
+      } catch (error) {
+        pending.remove();
+        showChatError(error.message || 'پاسخ واقعی دریافت نشد. این پرسش از سهمیه شما کم نشده است.');
+        question.value = text;
+        question.focus();
+      } finally {
+        chatSend.disabled = false;
       }
     });
   </script>
